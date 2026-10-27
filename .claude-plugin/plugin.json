@@ -1,0 +1,11 @@
+{
+  "name": "hellolingo",
+  "version": "1.0.0",
+  "description": "한국어로 보낸 프롬프트를 영어로 보여주고, 그 표현을 퀴즈로 다시 떠올리게 합니다",
+  "author": { "name": "dnjswhdzld" },
+  "homepage": "https://github.com/dnjswhdzld/hellolingo",
+  "repository": "https://github.com/dnjswhdzld/hellolingo",
+  "license": "MIT",
+  "keywords": ["language-learning", "english", "korean", "flashcards", "spaced-repetition"],
+  "types": "./types/index.d.ts"
+}

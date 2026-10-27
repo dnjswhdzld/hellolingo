@@ -1,0 +1,16 @@
+{
+  "name": "hellolingo",
+  "owner": {
+    "name": "dnjswhdzld"
+  },
+  "metadata": {
+    "description": "hellolingo 플러그인 하나를 담은 마켓플레이스"
+  },
+  "plugins": [
+    {
+      "name": "hellolingo",
+      "source": "./",
+      "description": "한국어로 보낸 프롬프트를 영어로 보여주고, 그 표현을 퀴즈로 다시 떠올리게 합니다"
+    }
+  ]
+}
