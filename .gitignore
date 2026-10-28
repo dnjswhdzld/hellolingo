@@ -15,3 +15,8 @@ dist/
 
 # 작업 인계 문서 (사용 기록과 내부 계획)
 HANDOFF.md
+GUIDE-PLAN.md
+# 화면 찍기와 카드 평가 도구가 만드는 것
+tools/screenshots/out/
+tools/eval/out/
+__pycache__/

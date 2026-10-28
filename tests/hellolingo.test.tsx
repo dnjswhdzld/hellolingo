@@ -47,7 +47,7 @@ const EN_REPLY = JSON.stringify({
 const ANSWER = '로그인 핸들러의 null 체크를 고쳤어요. 이 핸들러에 테스트도 추가할까요?'
 
 const PENDING_ROW = /^다음 문장 옮기는 중…$/
-const KO_ENGLISH_LINE = /^ {2}Fix the null check in the login handler\.$/
+const KO_ENGLISH_LINE = /^Fix the null check in the login handler\.$/
 
 const answered = (answer: string) =>
   ({ answer, durationMs: 1000, isAborted: false, turnId: 't1', reason: 'answer' }) as const
@@ -85,6 +85,7 @@ function engine(
   stored: Record<string, unknown> = {},
 ) {
   const asked: { model: string; prompt: string }[] = []
+  const opened: unknown[] = []
   const copy = (v: unknown) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)))
 
   on('store.get', (_, e) => ({ value: copy(stored[e.key]) }))
@@ -98,7 +99,11 @@ function engine(
   // 패널을 여는 명령과 패널 자체도 엔진 대신 받는다.
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('command.register', (_, e) => ({ value: { command: e.name } }))
-  on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('ui.open', (_, e) => {
+    opened.push(e)
+
+    return { value: { isPlaced: true } }
+  })
   on('model.complete', async (_, e) => {
     asked.push({ model: e.model, prompt: e.prompt })
     const text = await reply(e.prompt, e.model)
@@ -116,7 +121,7 @@ function engine(
     return <Text>engine</Text>
   })
 
-  return asked
+  return Object.assign(asked, { opened })
 }
 
 const typed = (text: string) => ({ text, wait: false, origin: { kind: 'composer' } }) as const
@@ -138,7 +143,7 @@ describe('band above the prompt', () => {
 
       // 영어 아래에 내 한국어를 쓰인 순서 그대로. 번호 없이 글만.
       expect(await ui.find({ type: 'Text', text: KO_ENGLISH_LINE })).toBeDefined()
-      expect(await ui.find({ type: 'Text', text: /^ {2}로그인 핸들러에서 null 체크 고쳐줘$/ })).toBeDefined()
+      expect(await ui.find({ type: 'Text', text: /^로그인 핸들러에서 null 체크 고쳐줘$/ })).toBeDefined()
 
       // 줄 안의 조각들: 짝마다 같은 색, 짝마다 다른 색.
       const piece = async (text: string) => (await ui.find({ type: 'Text', text: new RegExp(`^${text}$`) }))?.props
@@ -152,7 +157,7 @@ describe('band above the prompt', () => {
       // 짝 없는 한국어 조각은 흐리게.
       expect((await ui.findAll({ type: 'Text', text: /^ $/ })).some(t => t.props.dimColor === true)).toBe(true)
       // 핵심 표현 하나. 예문은 카드에 없다: 바로 위 영어 문장이 그 예문이다.
-      expect(await ui.find({ type: 'Text', text: /^ {2}• null check — null 여부 확인$/ })).toBeDefined()
+      expect(await ui.find({ type: 'Text', text: /^• null check — null 여부 확인$/ })).toBeDefined()
       expect(await ui.find({ type: 'Text', text: /Add a null check here/ })).toBeUndefined()
       // 카드는 둥근 테두리로 터미널의 다른 내용과 구분된다. 테두리를 어긋나게 하는 이모지는 없다.
       expect((await ui.find({ type: 'Box', key: 'prompt' }))?.props).toMatchObject({
@@ -177,7 +182,7 @@ describe('band above the prompt', () => {
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
 
     expect(await ui.find({ type: 'Text', text: KO_ENGLISH_LINE })).toBeDefined()
-    expect((await ui.find({ type: 'Text', text: /^ {2}로그인 핸들러에서 null 체크 고쳐줘/ }))?.props.dimColor).toBe(true)
+    expect((await ui.find({ type: 'Text', text: /^로그인 핸들러에서 null 체크 고쳐줘/ }))?.props.dimColor).toBe(true)
     await ui.unmount()
   })
 
@@ -210,12 +215,12 @@ describe('band above the prompt', () => {
 
     // 한글 줄에는 붙여넣은 커밋 정보 없이, 프롬프트에 쓴 그대로의 질문 부분만.
     expect(
-      await ui.find({ type: 'Text', text: /^ {2}이 커밋이 추가되었는데 03번 이후 브랜치들에서는 커밋이 없어 그래도 괜찮아 \?$/ }),
+      await ui.find({ type: 'Text', text: /^이 커밋이 추가되었는데 03번 이후 브랜치들에서는 커밋이 없어 그래도 괜찮아 \?$/ }),
     ).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /3f9c2a1e/ })).toBeUndefined()
     // 영어 문장에 없는 표현은 빠진다.
     expect(await ui.find({ type: 'Text', text: /take a look|as long as/ })).toBeUndefined()
-    expect(await ui.find({ type: 'Text', text: /^ {2}• don't have — 없다$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^• don't have — 없다$/ })).toBeDefined()
     await ui.unmount()
   })
 
@@ -240,7 +245,7 @@ describe('band above the prompt', () => {
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
     const piece = async (text: string) => (await ui.find({ type: 'Text', text: new RegExp(`^${text}$`) }))?.props
 
-    expect(await ui.find({ type: 'Text', text: new RegExp(`^ {2}${mixed}$`) })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: new RegExp(`^${mixed}$`) })).toBeDefined()
     expect((await piece('conflicts 나는데'))?.color).toBe((await piece('causes conflicts'))?.color)
     expect((await piece('feature/login-session-timeout to develop'))?.color).toBe(
       (await piece('Merging feature/login-session-timeout into develop'))?.color,
@@ -267,7 +272,7 @@ describe('band above the prompt', () => {
 
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
 
-    expect(await ui.find({ type: 'Text', text: new RegExp(`^ {2}${question.replace('?', '\\?')}$`) })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: new RegExp(`^${question.replace('?', '\\?')}$`) })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /3f9c2a1e/ })).toBeUndefined()
     await ui.unmount()
   })
@@ -305,8 +310,8 @@ describe('band above the prompt', () => {
     await clock.settle()
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
 
-    expect(await ui.find({ type: 'Text', text: /^ {2}• Can you take a look\? — 한번 봐 줄래요\?$/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /^ {4}예: Can you take a look at this PR\?$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^• Can you take a look\? — 한번 봐 줄래요\?$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^예: Can you take a look at this PR\?$/ })).toBeDefined()
     expect(Object.keys(asNotes(stored.notes))).toEqual(['can you take a look?'])
     await ui.unmount()
   })
@@ -473,7 +478,7 @@ describe('expression notebook and review quiz', () => {
       expect(await ui.find({ type: 'Box', key: 'quiz' })).toBeDefined()
       expect(await ui.find({ type: 'Text', text: /어제 본 표현/ })).toBeDefined()
       expect(await ui.find({ type: 'Text', text: /"null 여부 확인" — 영어로 떠올려 보세요/ })).toBeDefined()
-      expect(await ui.find({ type: 'Text', text: /^ {2}null check$/ })).toBeUndefined()
+      expect(await ui.find({ type: 'Text', text: /^null check$/ })).toBeUndefined()
       expect(await ui.find({ type: 'Button', key: 'quiz-reveal' })).toBeDefined()
       await ui.unmount()
     }
@@ -505,14 +510,16 @@ describe('expression notebook and review quiz', () => {
     const early = await $.ui.mount(QUIZ_BAND)
 
     expect(await early.find({ type: 'Text', text: /10초 뒤에 정답이 나와요/ })).toBeDefined()
-    expect(await early.find({ type: 'Text', text: /^ {2}null check$/ })).toBeUndefined()
+    expect(await early.find({ type: 'Text', text: /^null check$/ })).toBeUndefined()
     await early.unmount()
 
     await clock.advance(5000)
     const ui = await $.ui.mount(QUIZ_BAND)
 
-    expect(await ui.find({ type: 'Text', text: /^ {2}null check$/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /^ {4}예: Add a null check here\.$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^null check$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^예: Add a null check here\.$/ })).toBeDefined()
+    // 들여쓰기는 안쪽 여백이라, 좁은 칸에서 넘친 줄도 같은 자리에서 이어진다.
+    expect((await ui.find({ type: 'Box', text: /^예: Add a null check here\.$/ }))?.props.paddingLeft).toBe(4)
     expect((await ui.findAll({ type: 'Button' })).map(b => b.props.label)).toEqual(['떠올렸어요', '못 떠올렸어요'])
     await ui.press({ key: 'quiz-knew' })
     // 답한 뒤에는 버튼이 사라진다.
@@ -546,7 +553,7 @@ describe('expression notebook and review quiz', () => {
     const ui = await $.ui.mount(QUIZ_BAND)
 
     await ui.press({ key: 'quiz-reveal' })
-    expect(await ui.find({ type: 'Text', text: /^ {2}null check$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^null check$/ })).toBeDefined()
     await ui.press({ key: 'quiz-forgot' })
     expect(await ui.find({ type: 'Text', text: /괜찮아요, 내일 다시 볼게요/ })).toBeDefined()
     await ui.unmount()
@@ -637,9 +644,9 @@ describe('expression notebook and review quiz', () => {
     await done.unmount()
   })
 
-  test('/lingo-notes opens a pane listing the notebook', async ($, on) => {
+  test('/lingo-notes opens a pane listing the notebook, closed by Esc', async ($, on) => {
     const clock = mock.clock(on)
-    engine(on, () => KO_REPLY)
+    const { opened } = engine(on, () => KO_REPLY)
 
     await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
     await $.prompt.submit(typed(KO_PROMPT))
@@ -652,6 +659,8 @@ describe('expression notebook and review quiz', () => {
     })
 
     expect(ran.text).toContain('표현 노트')
+    // 빈 입력창에서 Esc로 닫을 수 있다.
+    expect(opened).toEqual([expect.objectContaining({ id: 'lingo-notes', closeOnEscape: true })])
 
     for (const surface of ['terminal', 'desktop'] as const) {
       const ui = await $.ui.mount({
@@ -753,11 +762,44 @@ describe('local helpers', () => {
     expect(isKorean('UserServiceImpl.findByEmailAndStatus 에서 NPE 나요')).toBe(true)
   })
 
+  test('overlapping fixes keep only the narrower one', async () => {
+    const reply = JSON.stringify({
+      fixes: [
+        { wrong: 'Please fix it and run test again', right: 'Please fix it and run the tests again', why: '' },
+        { wrong: 'run test again', right: 'run the tests again', why: 'test가 여러 개면 tests로 써요.' },
+        { wrong: 'Run test again', right: 'run the tests again', why: '' },
+      ],
+    })
+    const card = parseCard(false, reply, 'Please fix it and run test again')
+
+    expect(card?.kind === 'en-fix' ? card.fixes.map(f => f.why) : null).toEqual(['test가 여러 개면 tests로 써요.'])
+  })
+
   test('replies that are not the expected JSON give no card', async () => {
     expect(parseCard(true, 'Sure! Here is the translation.', KO_PROMPT)).toBeNull()
     expect(parseCard(true, '{"phrases": []}', KO_PROMPT)).toBeNull()
     expect(parseCard(false, '{"fixes": [], "natural": {"en": ""}}', KO_PROMPT)).toBeNull()
     expect(parseCard(true, '```json\n' + KO_REPLY + '\n```', KO_PROMPT)).toMatchObject({ kind: 'ko', original: KO_PROMPT })
+  })
+
+  test('a long prompt shows only the sentence the model picked, with every part matched', async () => {
+    const prompt = '다음 주에 팀 워크숍이 있어. 다들 바빠서 준비할 시간이 없거든. 계획하고 준비해줘! 장소는 회의실이면 돼.'
+    const reply = JSON.stringify({
+      original: '계획하고 준비해줘!',
+      english: 'Make a plan and get everything ready.',
+      parts: [
+        { ko: '계획하고', en: 'Make a plan and' },
+        { ko: '준비해줘!', en: 'get everything ready.' },
+      ],
+      phrases: [{ en: 'get everything ready', ko: '전부 미리 준비해 두다', example: 'Get everything ready before the meeting.' }],
+    })
+
+    expect(parseCard(true, reply, prompt)).toMatchObject({
+      kind: 'ko',
+      original: '계획하고 준비해줘!',
+      parts: [{ ko: '계획하고' }, { ko: '준비해줘!' }],
+      phrases: [{ en: 'get everything ready' }],
+    })
   })
 
   test('parts not found in both sentences are dropped, and fewer than 2 drop the map', async () => {
@@ -781,6 +823,16 @@ describe('local helpers', () => {
       ),
     ).toEqual(['로그인 핸들러에서', 'null 체크'])
     expect(kept(reply([{ ko: '고쳐줘', en: 'Fix' }]))).toEqual([])
+    // 문장 부호만 있는 조각은 짝이 아니다.
+    expect(
+      kept(
+        reply([
+          { ko: '로그인 핸들러에서', en: 'in the login handler' },
+          { ko: 'null 체크', en: 'the null check' },
+          { ko: '고쳐줘', en: '.' },
+        ]),
+      ),
+    ).toEqual(['로그인 핸들러에서', 'null 체크'])
     // 색만으로 구분되게 짝은 넷까지.
     expect(
       kept(

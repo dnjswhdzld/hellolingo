@@ -1,0 +1,142 @@
+{
+ "project": "sales-report",
+ "time": "09:10",
+ "size": [
+  100,
+  42
+ ],
+ "notes": [
+  {
+   "en": "Can you check",
+   "ko": "확인해 줄 수 있어?",
+   "example": "Can you check the numbers again?",
+   "added": -12,
+   "level": 2,
+   "seen": -6,
+   "due": -0.3
+  },
+  {
+   "en": "break it down by",
+   "ko": "~별로 나눠 보다",
+   "example": "Break it down by region.",
+   "added": -11,
+   "level": 1,
+   "seen": -8,
+   "due": -5.01
+  },
+  {
+   "en": "filter out",
+   "ko": "걸러 내다",
+   "example": "Filter out the test orders.",
+   "added": -10,
+   "level": 1,
+   "seen": -7,
+   "due": -4
+  },
+  {
+   "en": "compare it with",
+   "ko": "~와 비교하다",
+   "example": "Compare it with last month.",
+   "added": -9,
+   "level": 0,
+   "seen": -9,
+   "due": -8
+  },
+  {
+   "en": "sort by",
+   "ko": "~ 순으로 정렬하다",
+   "example": "Sort it by date.",
+   "added": -8,
+   "level": 1,
+   "seen": -5.9,
+   "due": -3
+  },
+  {
+   "en": "export it as",
+   "ko": "~로 내보내다",
+   "example": "Export it as a PNG.",
+   "added": -7,
+   "level": 0,
+   "seen": -7,
+   "due": -6
+  },
+  {
+   "en": "take a look",
+   "ko": "한번 봐 주다",
+   "example": "Can you take a look at this chart?",
+   "added": -7.5,
+   "level": 1,
+   "seen": -6,
+   "due": -3
+  },
+  {
+   "en": "round it to",
+   "ko": "~로 반올림하다",
+   "example": "Round it to two decimal places.",
+   "added": -6,
+   "level": 0,
+   "seen": -6,
+   "due": -5.02
+  },
+  {
+   "en": "pull out",
+   "ko": "뽑아내다",
+   "example": "Pull out the top 10 products.",
+   "added": -14,
+   "level": 1,
+   "seen": -10,
+   "due": -7
+  },
+  {
+   "en": "group by",
+   "ko": "~별로 묶다",
+   "example": "Group it by month.",
+   "added": -13,
+   "level": 1,
+   "seen": -9,
+   "due": -6.5
+  },
+  {
+   "en": "line it up",
+   "ko": "나란히 맞추다",
+   "example": "Line it up with the sales chart.",
+   "added": -13,
+   "level": 0,
+   "seen": -13,
+   "due": -11
+  },
+  {
+   "en": "double-check",
+   "ko": "다시 한번 확인하다",
+   "example": "Can you double-check the total?",
+   "added": -15,
+   "level": 2,
+   "seen": -12,
+   "due": -5.5
+  },
+  {
+   "en": "fill in",
+   "ko": "채워 넣다",
+   "example": "Fill in the missing dates.",
+   "added": -14,
+   "level": 0,
+   "seen": -14,
+   "due": -12
+  }
+ ],
+ "turns": [],
+ "actions": [
+  {
+   "say": "/lingo-notes"
+  },
+  {
+   "wait": "모두 "
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "notes-3-backlog"
+  }
+ ]
+}

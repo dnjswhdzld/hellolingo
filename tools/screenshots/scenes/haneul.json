@@ -1,0 +1,187 @@
+{
+ "project": "sales-report",
+ "time": "16:10",
+ "size": [
+  100,
+  42
+ ],
+ "card_delay": 2.0,
+ "notes": [
+  {
+   "en": "Can you check",
+   "ko": "확인해 줄 수 있어?",
+   "example": "Can you check the numbers again?",
+   "added": -7,
+   "level": 2,
+   "seen": -1,
+   "due": 6
+  },
+  {
+   "en": "break it down by",
+   "ko": "~별로 나눠 보다",
+   "example": "Break it down by region.",
+   "added": -6,
+   "level": 1,
+   "seen": -3,
+   "due": -0.01
+  },
+  {
+   "en": "filter out",
+   "ko": "걸러 내다",
+   "example": "Filter out the test orders.",
+   "added": -5,
+   "level": 1,
+   "seen": -2,
+   "due": 1
+  },
+  {
+   "en": "compare it with",
+   "ko": "~와 비교하다",
+   "example": "Compare it with last month.",
+   "added": -4,
+   "level": 0,
+   "seen": -4,
+   "due": -3
+  },
+  {
+   "en": "sort by",
+   "ko": "~ 순으로 정렬하다",
+   "example": "Sort it by date.",
+   "added": -3,
+   "level": 1,
+   "seen": -0.9,
+   "due": 2
+  },
+  {
+   "en": "export it as",
+   "ko": "~로 내보내다",
+   "example": "Export it as a PNG.",
+   "added": -2,
+   "level": 0,
+   "seen": -2,
+   "due": -1
+  },
+  {
+   "en": "take a look",
+   "ko": "한번 봐 주다",
+   "example": "Can you take a look at this chart?",
+   "added": -2.5,
+   "level": 1,
+   "seen": -1,
+   "due": 2
+  },
+  {
+   "en": "round it to",
+   "ko": "~로 반올림하다",
+   "example": "Round it to two decimal places.",
+   "added": -1,
+   "level": 0,
+   "seen": -1,
+   "due": -0.02
+  }
+ ],
+ "turns": [
+  {
+   "user": "지난달 주문 CSV 읽어서 주별 매출 그래프 그려줘",
+   "steps": [
+    {
+     "say": "주문 데이터부터 볼게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/data/orders_2026-09.csv"
+     },
+     "delay": 3.0
+    },
+    {
+     "say": "주별로 묶어 막대그래프를 그리는 스크립트를 만듭니다.",
+     "tool": "Write",
+     "input": {
+      "file_path": "{project}/report.py",
+      "content": "\"\"\"9월 주문 CSV를 주별 매출로 묶어 막대그래프(weekly_sales.svg)로 그린다.\"\"\"\nimport csv\nfrom collections import defaultdict\nfrom datetime import date\n\nweeks = defaultdict(int)\nwith open('data/orders_2026-09.csv', newline='') as f:\n    for row in csv.DictReader(f):\n        d = date.fromisoformat(row['date'])\n        weeks[(d.day - 1) // 7 + 1] += int(row['amount'])\n\ntop = max(weeks.values())\nbars = []\nfor i, (week, total) in enumerate(sorted(weeks.items())):\n    h = 200 * total / top\n    bars.append(f'<rect x=\"{40 + i * 80}\" y=\"{230 - h:.0f}\" width=\"56\" height=\"{h:.0f}\" fill=\"#4c8bf5\"/>'\n                f'<text x=\"{68 + i * 80}\" y=\"252\" text-anchor=\"middle\">{week}주차</text>')\n    print(f'9월 {week}주차  {total:>9,}원')\n\nwith open('weekly_sales.svg', 'w') as f:\n    f.write(f'<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{60 + 80 * len(weeks)}\" height=\"264\">{\"\".join(bars)}</svg>')\nprint('weekly_sales.svg에 저장했습니다.')\n"
+     },
+     "delay": 5.0
+    },
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "python3 report.py",
+      "description": "주별 매출 계산과 그래프 저장"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "주별 매출 그래프를 `weekly_sales.svg`에 저장했습니다.\n\n- 가장 많이 판 주는 4주차(46만 5천 원)입니다.\n- 5주차는 29일과 30일 이틀뿐이라 낮게 나옵니다.",
+     "delay": 3.0
+    }
+   ]
+  },
+  {
+   "user": "환불된 주문은 빼고 다시 그려줘",
+   "steps": [
+    {
+     "say": "상태가 `refunded`인 주문을 건너뛰게 고칩니다.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/report.py",
+      "old_string": "        d = date.fromisoformat(row['date'])\n",
+      "new_string": "        if row['status'] == 'refunded':\n            continue\n        d = date.fromisoformat(row['date'])\n"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "python3 report.py",
+      "description": "환불을 뺀 주별 매출로 다시 그리기"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "환불된 주문 6건을 빼고 다시 그렸습니다. 2주차와 3주차가 10만 3천 원씩 줄어서, 가장 많이 줄었습니다.",
+     "delay": 2.5
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "say": "지난달 주문 CSV 읽어서 주별 매출 그래프 그려줘"
+  },
+  {
+   "wait": "영어로 옮기는 중"
+  },
+  {
+   "gone": "영어로 옮기는 중"
+  },
+  {
+   "wait": "이틀뿐이라"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "notes-1-chart"
+  },
+  {
+   "say": "환불된 주문은 빼고 다시 그려줘"
+  },
+  {
+   "wait": "3천 원씩"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "/lingo-notes"
+  },
+  {
+   "wait": "모두 "
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "notes-2-pane"
+  }
+ ]
+}

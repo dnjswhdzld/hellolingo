@@ -2,9 +2,9 @@
 
 [English summary](#in-english)
 
-Claude에게 한국어로 일을 시키면, 그 문장을 영어로 보여주고 나중에 다시 떠올리게 해 주는 Claude Code mod입니다.
+Claude와 일하는 동안 영어가 조금씩 늘게 돕는 Claude Code 플러그인입니다. 한국어로 일을 시키면, 그 문장을 영어로 보여 주고 나중에 다시 떠올리게 합니다.
 
-따로 공부할 시간을 낼 필요가 없습니다. 평소처럼 프롬프트를 보내면 됩니다.
+따로 공부할 시간을 낼 필요가 없습니다. 평소처럼 프롬프트를 보내면 됩니다. 지금은 영어를 배웁니다. 일본어, 중국어, 비즈니스 용어도 차례로 넣을 계획입니다.
 
 ## 이렇게 배웁니다
 
@@ -14,27 +14,17 @@ Claude에게 한국어로 일을 시키면, 그 문장을 영어로 보여주고
 
 카드는 이렇게 생겼습니다.
 
-```
-영어로는
-  Fix the null check in the login handler.
-  로그인 핸들러에서 null 체크 고쳐줘
-  • null check — null 여부 확인
-```
+![카드에 영어 문장과 내 한국어 문장이 같은 색 조각으로 나와 있습니다.](docs/guide/images/see-2-card.png)
 
-퀴즈는 카드 옆에 나옵니다.
+다음 날부터는 퀴즈가 카드 옆에 나옵니다.
 
-```
-복습 · 어제 본 표현
-  "null 여부 확인" — 영어로 떠올려 보세요
-    10초 뒤에 정답이 나와요
-  [ 정답 보기 ]
-```
+![왼쪽에 카드, 오른쪽에 어제 본 표현을 떠올리는 퀴즈가 있습니다.](docs/guide/images/recall-1-quiz.png)
 
 영어로 프롬프트를 쓰면 틀린 곳을 고쳐 줍니다. 틀린 곳이 없으면 더 자연스러운 말을 하나 알려 줍니다.
 
 ## 설치
 
-Claude Code v2.1.287 이상이 필요합니다. 터미널과 데스크톱 앱에서 보입니다. VS Code 확장에서는 보이지 않습니다.
+Claude Code v2.1.311 이상이 필요합니다. 터미널과 데스크톱 앱에서 보입니다. VS Code 확장에서는 보이지 않습니다.
 
 1. Claude Code에 아래 줄을 입력합니다.
 
@@ -57,7 +47,7 @@ Claude Code v2.1.287 이상이 필요합니다. 터미널과 데스크톱 앱에
 
 ## 노트 보기
 
-`/lingo-notes`를 입력하면 모은 표현이 옆 패널에 나옵니다.
+`/lingo-notes`를 입력하면 모은 표현이 패널에 나옵니다. 입력창이 빈 채로 `Esc`를 누르면 닫힙니다.
 
 새 표현은 하루에 5개까지만 모읍니다. 복습할 표현이 10개 이상 쌓이면, 복습해서 줄어들 때까지 새 표현은 모으지 않습니다. 많이 모으는 것보다 잊지 않는 것이 중요하기 때문입니다.
 
@@ -66,23 +56,24 @@ Claude Code v2.1.287 이상이 필요합니다. 터미널과 데스크톱 앱에
 - **사용량.** 학습할 프롬프트 하나에 haiku 모델을 한 번 부릅니다. Claude Code 사용량에 들어갑니다.
 - **보내는 것.** 내 프롬프트만 haiku에 보냅니다. 코드 블록은 빼고 앞 1500자까지입니다. Claude의 답, 코드, 파일은 읽지도 바꾸지도 않습니다.
 - **저장.** 노트는 내 컴퓨터에만 있습니다. `~/.claude/plugins/store/` 폴더의 `hellolingo_`로 시작하는 파일입니다. 지우려면 Claude Code를 모두 닫고 그 파일을 지웁니다.
-- **초기 버전.** 이 mod가 쓰는 Claude Code 기능이 아직 미리 보기(early access) 단계입니다. Claude Code가 바뀌면 동작이 깨질 수 있습니다.
+- **초기 버전.** 이 플러그인이 쓰는 Claude Code 기능이 아직 미리 보기(early access) 단계입니다. Claude Code가 바뀌면 동작이 깨질 수 있습니다.
 
 ## 더 읽을거리
 
+- [가이드](docs/guide/README.md). 네 사람이 Claude와 일하는 며칠을 따라가며, 설치부터 퀴즈와 노트, 문제 해결까지 실제 화면으로 보여 줍니다.
 - [학습 설계와 근거](docs/learning-design.md). 왜 이렇게 만들었는지, 어떤 연구를 따랐는지 적었습니다.
 - [동작 방식](docs/how-it-works.md). 기여하는 사람을 위한 자세한 설명입니다.
 - [로드맵](ROADMAP.md), [바뀐 내용](CHANGELOG.md), [기여하기](CONTRIBUTING.md).
 
 ## In English
 
-hellolingo is a Claude Code mod for Korean developers who want to learn English from the prompts they already write.
+hellolingo is a Claude Code plugin for Korean speakers who want to learn English from the prompts they already write while working with Claude.
 
 1. **See.** Send a prompt in Korean and its English version appears above the prompt box. Matching parts of the two sentences share a color.
 2. **Collect.** One reusable expression from it goes into a notebook.
 3. **Recall.** From the next day, while Claude works, that expression comes back as a spaced-repetition quiz. Recall it in your head. The answer shows after 10 seconds, or press `r`. Press `o` if you recalled it and `x` if not.
 
-Prompts written in English get their mistakes corrected. It collects at most 5 new expressions a day and pauses when 10 reviews are due. Each learnable prompt goes to haiku once, through Claude Code's own model call. It never reads or changes Claude's replies, your code or your files, and your notes stay on your machine. It needs Claude Code v2.1.287 or later and supports Korean to English only. The design and the research behind it are in [docs/learning-design.md](docs/learning-design.md) (Korean).
+Prompts written in English get their mistakes corrected. It collects at most 5 new expressions a day and pauses when 10 reviews are due. Each learnable prompt goes to haiku once, through Claude Code's own model call. It never reads or changes Claude's replies, your code or your files, and your notes stay on your machine. It needs Claude Code v2.1.311 or later and supports Korean to English for now. Japanese, Chinese and business terms are planned. The design and the research behind it are in [docs/learning-design.md](docs/learning-design.md) (Korean).
 
 ## 라이선스
 

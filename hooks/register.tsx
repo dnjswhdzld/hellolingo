@@ -4,7 +4,7 @@
 //  - 영어 프롬프트: 틀린 부분 → 고친 부분 (없으면 더 자연스러운 표현 1개)
 // 새 프롬프트를 보내도 카드는 지우지 않는다: 새 카드가 준비될 때까지 이전 카드를 그대로 둔다.
 // 카드의 핵심 표현은 표현 노트에 모아 두고, Claude가 작업하는 동안 복습할 때가 된 것을
-// 오른쪽에 퀴즈로 낸다. /lingo-notes 로 노트를 옆 패널에서 본다.
+// 오른쪽에 퀴즈로 낸다. /lingo-notes 로 노트를 패널에서 본다.
 // 본 작업(프롬프트, 응답, 코드)은 건드리지 않는다.
 
 import { atom, read, update } from 'claude-code'
@@ -50,7 +50,7 @@ const answering = new Set<number>()
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     try {
-      await $.command.register({ name: 'lingo-notes', description: '영어 표현 노트를 옆 패널에 보여줘요' })
+      await $.command.register({ name: 'lingo-notes', description: '영어 표현 노트를 패널에 보여줘요' })
       await loadNotes($)
     } catch {
       // 노트를 못 읽어도 카드는 그대로 동작한다.
@@ -62,26 +62,19 @@ export const register: Register = on => {
   on('command.run', { command: 'lingo-notes' }, async $ => {
     // 다른 세션이 그사이 모은 표현도 보이게 저장소에서 다시 읽는다.
     await loadNotes($)
-    await $.ui.open({ id: NOTES_PANE, title: '표현 노트' })
+    // 빈 입력창에서 Esc를 누르면 닫힌다. 없으면 마우스로 ✕를 눌러야만 닫혀서.
+    await $.ui.open({ id: NOTES_PANE, title: '표현 노트', closeOnEscape: true })
 
     return { text: '영어 표현 노트를 열었어요.' }
   })
 
   on('ui.render', { component: 'Pane', requestId: NOTES_PANE }, async ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
+    const { Box } = $.ui.resolve(e)
     const now = await $.clock.now()
     const rows = notesPaneRows(await read($, notesView), now)
     const room = Math.max(1, (e.viewport?.rows ?? 24) - 4)
 
-    return (
-      <Box flexDirection="column">
-        {rows.slice(0, room).map(row => (
-          <Text color={row.color} bold={row.bold} dimColor={row.dim} wrap="wrap">
-            {row.text}
-          </Text>
-        ))}
-      </Box>
-    )
+    return <Box flexDirection="column">{drawRows($.ui.resolve(e), rows.slice(0, room))}</Box>
   })
 
   on('prompt.submit', async ($, e, next) => {
@@ -380,44 +373,56 @@ async function answerQuiz($: EngineInterface, id: number, knew: boolean): Promis
   }
 }
 
-type TextRow = { text: string; color?: string; bold?: boolean; dim?: boolean }
+/** 글 한 토막의 모양 */
+type Run = { text: string; color?: string; bold?: boolean; dim?: boolean }
+
+/** 글 한 줄. indent칸만큼 들여 쓴다. */
+type TextRow = Run & { indent?: number }
 
 type RowButton = { key: string; label: string; hotkey: string; onPress: () => void }
 
 /** 글 한 줄, 한 줄 안에서 토막마다 모양이 다른 줄, 또는 버튼 한 줄 */
-type Row = TextRow | { runs: readonly TextRow[] } | { buttons: readonly RowButton[] }
+type Row = TextRow | { runs: readonly Run[]; indent?: number } | { buttons: readonly RowButton[] }
 
 /** 카드 줄들을 그린다: 글 한 줄, 토막마다 모양이 다른 줄, 버튼 줄 */
 function drawRows({ Box, Button, Text }: ElementTable, rows: readonly Row[]) {
-  return rows.map(row =>
-    'buttons' in row ? (
-      <Box flexDirection="row" columnGap={1} marginLeft={2}>
-        {row.buttons.map(b => (
-          <Button key={b.key} label={b.label} hotkey={b.hotkey} onPress={b.onPress} />
-        ))}
-      </Box>
-    ) : 'runs' in row ? (
-      // 한 줄 안에서 토막마다 색을 달리한다. 넘치면 글처럼 줄을 바꾼다.
-      <Text wrap="wrap">
-        {row.runs.map(run => (
-          <Text color={run.color} bold={run.bold} dimColor={run.dim}>
-            {run.text}
-          </Text>
-        ))}
-      </Text>
-    ) : (
-      <Text color={row.color} bold={row.bold} dimColor={row.dim} wrap="wrap">
-        {row.text}
-      </Text>
-    ),
-  )
+  return rows.map(row => {
+    if ('buttons' in row) {
+      return (
+        <Box flexDirection="row" columnGap={1} marginLeft={2}>
+          {row.buttons.map(b => (
+            <Button key={b.key} label={b.label} hotkey={b.hotkey} onPress={b.onPress} />
+          ))}
+        </Box>
+      )
+    }
+
+    const line =
+      'runs' in row ? (
+        // 한 줄 안에서 토막마다 색을 달리한다. 넘치면 글처럼 줄을 바꾼다.
+        <Text wrap="wrap">
+          {row.runs.map(run => (
+            <Text color={run.color} bold={run.bold} dimColor={run.dim}>
+              {run.text}
+            </Text>
+          ))}
+        </Text>
+      ) : (
+        <Text color={row.color} bold={row.bold} dimColor={row.dim} wrap="wrap">
+          {row.text}
+        </Text>
+      )
+
+    // 들여쓰기는 앞에 공백을 붙이지 않고 안쪽 여백으로 한다. 공백이면 넘친 다음 줄이 맨 앞에서 시작한다.
+    return row.indent === undefined ? line : <Box paddingLeft={row.indent}>{line}</Box>
+  })
 }
 
 /** 보여줄 카드가 아직 없을 때, 첫 카드를 영어로 옮기는 동안의 줄 */
 function pendingRows(): Row[] {
   return [
     { text: '영어로는', color: ACCENT, bold: true },
-    { text: '  영어로 옮기는 중…', dim: true },
+    { text: '영어로 옮기는 중…', dim: true, indent: 2 },
   ]
 }
 
@@ -441,9 +446,9 @@ export function cardRows(c: Card): Row[] {
       return [
         { text: '이렇게 고치면 좋아요', color: ACCENT, bold: true },
         ...c.fixes.flatMap(f => [
-          { text: `  ✗ ${f.wrong}`, color: BAD },
-          { text: `  ✓ ${f.right}`, color: GOOD },
-          { text: `    ${f.why}`, dim: true },
+          { text: `✗ ${f.wrong}`, color: BAD, indent: 2 },
+          { text: `✓ ${f.right}`, color: GOOD, indent: 2 },
+          { text: f.why, dim: true, indent: 4 },
         ]),
       ]
     case 'en-natural':
@@ -463,14 +468,14 @@ export function cardRows(c: Card): Row[] {
 function sentenceRows(c: SentenceMap): Row[] {
   return c.parts.length > 0 && c.original !== null
     ? [
-        { runs: [{ text: '  ' }, ...segments(c.english, c.parts.map(p => p.en)).map(s => pairRun(s, false))] },
-        { runs: [{ text: '  ' }, ...segments(c.original, c.parts.map(p => p.ko)).map(s => pairRun(s, true))] },
+        { runs: segments(c.english, c.parts.map(p => p.en)).map(s => pairRun(s, false)), indent: 2 },
+        { runs: segments(c.original, c.parts.map(p => p.ko)).map(s => pairRun(s, true)), indent: 2 },
       ]
-    : [{ text: `  ${c.english}` }, ...(c.original ? [{ text: `  ${c.original}`, dim: true }] : [])]
+    : [{ text: c.english, indent: 2 }, ...(c.original ? [{ text: c.original, dim: true, indent: 2 }] : [])]
 }
 
 /** 짝지은 조각은 그 짝의 색, 나머지 한국어는 흐리게 */
-function pairRun(s: Segment, isKoreanLine: boolean): TextRow {
+function pairRun(s: Segment, isKoreanLine: boolean): Run {
   return s.pair === null ? { text: s.text, dim: isKoreanLine } : { text: s.text, color: pairColor(s.pair) }
 }
 
@@ -485,18 +490,18 @@ function pairColor(pair: number): string {
 export function quizRows(q: Quiz, on: { reveal: () => void; knew: () => void; forgot: () => void }): Row[] {
   const head: Row[] = [
     { text: `복습 · ${daysAgo(q.seenDaysAgo)} 본 표현`, color: ACCENT, bold: true },
-    { text: `  "${q.ko}" — 영어로 떠올려 보세요` },
+    { text: `"${q.ko}" — 영어로 떠올려 보세요`, indent: 2 },
   ]
 
   if (!q.isRevealed) {
     return [
       ...head,
-      { text: `    ${REVEAL_MS / 1000}초 뒤에 정답이 나와요`, dim: true },
+      { text: `${REVEAL_MS / 1000}초 뒤에 정답이 나와요`, dim: true, indent: 4 },
       { buttons: [{ key: 'quiz-reveal', label: '정답 보기', hotkey: 'r', onPress: on.reveal }] },
     ]
   }
 
-  const answer: Row[] = [{ text: `  ${q.en}`, bold: true }, ...exampleRows(q.example)]
+  const answer: Row[] = [{ text: q.en, bold: true, indent: 2 }, ...exampleRows(q.example)]
 
   if (q.answer === null) {
     return [
@@ -513,8 +518,8 @@ export function quizRows(q: Quiz, on: { reveal: () => void; knew: () => void; fo
 
   const result: Row =
     q.answer === 'knew'
-      ? { text: `  ✓ 좋아요! ${inDays(q.nextInDays)} 다시 볼게요`, color: GOOD }
-      : { text: `  ↺ 괜찮아요, ${inDays(q.nextInDays)} 다시 볼게요`, dim: true }
+      ? { text: `✓ 좋아요! ${inDays(q.nextInDays)} 다시 볼게요`, color: GOOD, indent: 2 }
+      : { text: `↺ 괜찮아요, ${inDays(q.nextInDays)} 다시 볼게요`, dim: true, indent: 2 }
 
   return [...head, ...answer, result]
 }
@@ -532,7 +537,7 @@ export function notesPaneRows(notes: Notes, now: number): TextRow[] {
   return [
     { text: `모두 ${all.length}개 · 지금 복습할 것 ${due}개`, color: ACCENT, bold: true },
     ...intakeRows(notes, now),
-    ...all.flatMap(n => [{ text: `• ${n.en} — ${n.ko}` }, { text: `    ${dueLabel(n.dueAt, now)}`, dim: true }]),
+    ...all.flatMap(n => [{ text: `• ${n.en} — ${n.ko}` }, { text: dueLabel(n.dueAt, now), dim: true, indent: 4 }]),
   ]
 }
 
@@ -563,9 +568,9 @@ function dueLabel(dueAt: number, now: number): string {
 }
 
 function phraseRow(p: Phrase): Row {
-  return { text: `  • ${p.en} — ${p.ko}` }
+  return { text: `• ${p.en} — ${p.ko}`, indent: 2 }
 }
 
 function exampleRows(example: string): Row[] {
-  return example === '' ? [] : [{ text: `    예: ${example}`, dim: true }]
+  return example === '' ? [] : [{ text: `예: ${example}`, dim: true, indent: 4 }]
 }

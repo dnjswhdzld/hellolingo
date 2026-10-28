@@ -1,0 +1,198 @@
+{
+ "project": "pay-api",
+ "time": "14:20",
+ "size": [
+  100,
+  42
+ ],
+ "card_delay": 2.0,
+ "notes": [
+  {
+   "en": "take a look",
+   "ko": "한번 봐 주다",
+   "example": "Can you take a look at this PR?",
+   "added": -2.0,
+   "due": 1.0,
+   "level": 1,
+   "seen": -0.5
+  }
+ ],
+ "turns": [
+  {
+   "user": "원인이 뭔지 찾아서 알려줘",
+   "steps": [
+    {
+     "say": "로그에 나온 파일부터 볼게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/pay_api/approve.py"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/pay_api/client.py"
+     },
+     "delay": 1.2
+    },
+    {
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/pay_api/config.py"
+     },
+     "delay": 1.2
+    },
+    {
+     "text": "원인을 찾았습니다.\n\n- 어제 배포에서 `PG_TIMEOUT_SECONDS`를 10초에서 3초로 줄였습니다 (`config.py`).\n- 결제사가 3초 안에 답하지 못하면 `client.py`가 `TimeoutError`를 냅니다.\n- `approve.py`는 이 오류를 그대로 올려서, 500 응답이 됩니다.\n\n결제사가 붐빌 때만 3초를 넘기니, \"가끔\" 난다는 것과도 맞습니다.",
+     "delay": 3.0
+    }
+   ]
+  },
+  {
+   "user": "재현하는 테스트부터 써줘",
+   "steps": [
+    {
+     "say": "3초 넘게 걸리는 정상 승인을 테스트로 만들게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/tests/test_approve.py"
+     },
+     "delay": 2.5
+    },
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/tests/test_approve.py",
+      "old_string": "    def test_pg_that_never_answers_times_out(self):\n        with self.assertRaises(TimeoutError):\n            approve(pg(30), {'id': 'A-4', 'amount': 19000})",
+      "new_string": "    def test_pg_that_never_answers_times_out(self):\n        with self.assertRaises(TimeoutError):\n            approve(pg(30), {'id': 'A-4', 'amount': 19000})\n\n    def test_slow_but_normal_answer_is_approved(self):\n        # 붐빌 때 결제사는 4초쯤 걸려서 답한다.\n        self.assertEqual(approve(pg(4.2), {'id': 'A-5', 'amount': 19000})['status'], 'approved')"
+     },
+     "delay": 2.5
+    },
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "python3 -m unittest",
+      "description": "테스트 실행"
+     },
+     "delay": 1.5
+    },
+    {
+     "text": "재현했습니다. 결제사가 4.2초 걸려 답하면 `TimeoutError`가 나서 새 테스트가 실패합니다.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "Please fix it and run test again",
+   "steps": [
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/pay_api/config.py",
+      "old_string": "PG_TIMEOUT_SECONDS = 3  # 10에서 줄임 (10/27 배포, 응답을 빨리 돌려주려고)",
+      "new_string": "PG_TIMEOUT_SECONDS = 10  # 결제사가 붐비면 4초 넘게 걸린다. 줄이기 전에 응답 시간을 먼저 볼 것"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "python3 -m unittest",
+      "description": "Run the tests"
+     },
+     "delay": 1.5
+    },
+    {
+     "text": "Fixed. I set `PG_TIMEOUT_SECONDS` back to 10 seconds and ran the tests again. All 5 tests pass.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "Can you write the PR description?",
+   "steps": [
+    {
+     "text": "Here's a draft.\n\n**Restore the PG approval timeout to 10s**\n\nYesterday's deploy cut `PG_TIMEOUT_SECONDS` from 10s to 3s. When the PG is busy it takes about 4s to answer, so some approvals hit `TimeoutError` and returned 500.\n\n- Set the timeout back to 10s.\n- Add a test for a slow but normal answer (4.2s).",
+     "delay": 4.0
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "paste": "2026-10-27 14:02:11,483 ERROR pay_api.approve approve failed order=A-10293\nTraceback (most recent call last):\n  File \"/srv/pay-api/pay_api/approve.py\", line 11, in approve\n    result = client.approve(order['amount'], timeout=PG_TIMEOUT_SECONDS)\n  File \"/srv/pay-api/pay_api/client.py\", line 11, in approve\n    raise TimeoutError(f'PG did not answer in {timeout}s')\nTimeoutError: PG did not answer in 3s\n"
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "type": "어제 배포한 뒤로 결제 승인이 가끔 500 에러를 내. 원인이 뭔지 찾아서 알려줘"
+  },
+  {
+   "sleep": 0.4
+  },
+  {
+   "shot": "english-0-paste"
+  },
+  {
+   "keys": [
+    "Enter"
+   ]
+  },
+  {
+   "wait": "영어로 옮기는 중"
+  },
+  {
+   "gone": "영어로 옮기는 중"
+  },
+  {
+   "wait": "\"가끔\" 난다는"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "english-1-log"
+  },
+  {
+   "say": "재현하는 테스트부터 써줘"
+  },
+  {
+   "wait": "새 테스트가 실패합니다"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "Please fix it and run test again"
+  },
+  {
+   "wait": "이렇게 고치면 좋아요"
+  },
+  {
+   "wait": "All 5 tests pass"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "english-2-fix"
+  },
+  {
+   "say": "Can you write the PR description?"
+  },
+  {
+   "wait": "잘 썼어요"
+  },
+  {
+   "wait": "(4.2s)"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "english-3-natural"
+  }
+ ]
+}

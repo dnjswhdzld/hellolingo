@@ -1,0 +1,31 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.name {
+  flex: 1;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 18px;
+}
+
+.price {
+  font-weight: 600;
+}
+
+.remove {
+  color: #888;
+}
