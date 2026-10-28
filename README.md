@@ -62,8 +62,7 @@ Claude Code v2.1.311 이상이 필요합니다. 터미널과 데스크톱 앱에
 
 - [가이드](docs/guide/README.md). 네 사람이 Claude와 일하는 며칠을 따라가며, 설치부터 퀴즈와 노트, 문제 해결까지 실제 화면으로 보여 줍니다.
 - [학습 설계와 근거](docs/learning-design.md). 왜 이렇게 만들었는지, 어떤 연구를 따랐는지 적었습니다.
-- [동작 방식](docs/how-it-works.md). 기여하는 사람을 위한 자세한 설명입니다.
-- [로드맵](ROADMAP.md), [바뀐 내용](CHANGELOG.md), [기여하기](CONTRIBUTING.md).
+- [동작 방식](docs/how-it-works.md). 기여하는 사람을 위한 자세한 설명과, 고쳐서 보내는 법입니다.
 
 ## In English
 

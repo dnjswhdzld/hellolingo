@@ -16,7 +16,6 @@ const ALLOWED_EMAIL_DOMAINS = ['users.noreply.github.com', 'example.invalid', 'e
 // 학습자가 읽는 글에 쓰지 않는 문법 용어. docs/learning-design.md의 글쓰기 규칙.
 const GRAMMAR_TERMS = ['조사', '어미', '부정사', '수동태', '동명사', '분사', '관계대명사', '전치사']
 const LEARNER_DOCS = file => file === 'README.md' || file.startsWith('docs/guide/')
-const USER_FACING = file => /^(hooks|types|\.claude-plugin)\//.test(file)
 
 const base = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : 'origin/main'
 const hasBase = (() => {
@@ -41,10 +40,9 @@ const CHECKS = [
   { name: '내부 문서가 커밋되지 않음', run: () => INTERNAL_FILES.filter(f => files.includes(f)).map(f => `${f}: .gitignore에 있어야 합니다`) },
   { name: '문서 링크와 그림 경로', run: links },
   { name: '그림 크기와 쓰이지 않는 그림', run: images },
-  { name: '매니페스트와 CHANGELOG 버전', run: manifest },
+  { name: '매니페스트', run: manifest },
   { name: '학습자 글에 문법 용어 없음', run: grammarTerms },
   { name: '커밋 메시지에 작성 도구 표기 없음', run: commitMessages, needsBase: true },
-  { name: '동작이 바뀌면 CHANGELOG도', run: changelog, needsBase: true },
 ]
 
 let failed = false
@@ -143,11 +141,9 @@ function images() {
 function manifest() {
   const plugin = JSON.parse(read('.claude-plugin/plugin.json'))
   const market = JSON.parse(read('.claude-plugin/marketplace.json'))
-  const released = read('CHANGELOG.md').match(/^## (\d+\.\d+\.\d+)/m)?.[1]
   const hasEmail = value => JSON.stringify(value).includes('"email"')
 
   return [
-    ...(released === plugin.version ? [] : [`plugin.json 버전 ${plugin.version}과 CHANGELOG의 마지막 버전 ${released}이 다릅니다`]),
     ...(market.plugins?.some(p => p.name === plugin.name) ? [] : [`marketplace.json에 ${plugin.name} 플러그인이 없습니다`]),
     ...(hasEmail(plugin) || hasEmail(market) ? ['매니페스트에 email이 있습니다. 이 저장소는 이메일을 싣지 않습니다'] : []),
   ]
@@ -166,15 +162,4 @@ function commitMessages() {
     .split('\0')
     .filter(m => /^co-authored-by:|generated with \[?claude/im.test(m))
     .map(m => `${m.trim().split(/\s/)[0]}: Co-Authored-By나 생성 도구 표기를 빼 주세요`)
-}
-
-function changelog() {
-  const changed = new Set([
-    ...git('diff', '--name-only', `${base}...HEAD`).split('\n'),
-    ...git('diff', '--name-only', 'HEAD').split('\n'),
-    ...git('ls-files', '--others', '--exclude-standard').split('\n'),
-  ])
-  const behavior = [...changed].filter(USER_FACING)
-
-  return behavior.length > 0 && !changed.has('CHANGELOG.md') ? [`${behavior.join(', ')}이 바뀌었는데 CHANGELOG.md에 적지 않았습니다`] : []
 }
