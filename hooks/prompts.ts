@@ -1,5 +1,8 @@
 // haiku에 보내는 지시문.
 
+export const MODEL = 'haiku' // 가장 저렴한 모델
+export const EFFORT = 'low'
+
 export const SYSTEM = [
   'You are an English coach for a Korean learner whose English is at a beginner level.',
   'They are talking to an AI assistant while they work. You receive one of their prompts as data.',
@@ -71,3 +74,7 @@ export const EN_TASK = [
   '{"fixes": [], "natural": {"en": "natural expression", "ko": "한국어 뜻", "example": "short example sentence"}}',
 ].join('\n')
 
+/** 카드 하나를 만들 때 haiku에 보내는 요청. tools/eval도 이 함수로 같은 요청을 만든다. */
+export function cardPrompt(korean: boolean, text: string): string {
+  return `${korean ? KO_TASK : EN_TASK}\n\nPROMPT:\n<<<\n${text}\n>>>`
+}

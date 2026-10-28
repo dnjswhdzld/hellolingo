@@ -49,6 +49,8 @@ claude plugin test .
 npx --yes -p typescript@5.6.3 tsc -p tsconfig.json
 ```
 
+모델 지시문(`hooks/prompts.ts`)이나 카드 파서(`hooks/cards.ts`)를 바꾸면, [tools/eval](tools/eval/README.md)로 바꾸기 전과 후의 실제 haiku 카드를 셉니다. 테스트는 모델 답을 흉내만 내서, 지시문이 실제로 듣는지는 이것으로만 알 수 있습니다. 로그인이 필요합니다.
+
 ## 지키는 것
 
 - Claude의 응답, 코드, 커밋 메시지, 파일은 바꾸지 않습니다. 이 mod는 읽기만 합니다.

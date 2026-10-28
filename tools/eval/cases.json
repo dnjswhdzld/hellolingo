@@ -1,0 +1,26 @@
+[
+  { "id": "keep-look", "expect": "keep", "prompt": "Can you take a look at this error?" },
+  { "id": "keep-tests", "expect": "keep", "prompt": "Run the tests and tell me what fails." },
+  { "id": "keep-pr", "expect": "keep", "prompt": "Can you write the PR description?" },
+  { "id": "keep-spinner", "expect": "keep", "prompt": "Add a loading spinner to the submit button." },
+  { "id": "keep-null", "expect": "keep", "prompt": "Why does this function return null?" },
+  { "id": "keep-build", "expect": "keep", "prompt": "Make sure the build passes before you commit." },
+  { "id": "keep-rename", "expect": "keep", "prompt": "Rename this variable to userCount." },
+  { "id": "keep-sales", "expect": "keep", "prompt": "Could you summarize the sales data by week?" },
+
+  { "id": "fix-test", "expect": "fix", "prompt": "Please fix it and run test again" },
+  { "id": "fix-clean", "expect": "fix", "prompt": "Can you make the code more clean?" },
+  { "id": "fix-proceed", "expect": "fix", "prompt": "Please proceed the deployment." },
+  { "id": "fix-explain", "expect": "fix", "prompt": "Explain me this error." },
+  { "id": "fix-doesnt", "expect": "fix", "prompt": "The tests doesn't pass on my machine." },
+  { "id": "fix-refactoring", "expect": "fix", "prompt": "Please do the refactoring of this file." },
+  { "id": "fix-check", "expect": "fix", "prompt": "Please make a check of the login function." },
+  { "id": "fix-perform", "expect": "fix", "prompt": "I would like you to perform the fixing of this bug." },
+
+  { "id": "ko-label", "expect": "ko", "prompt": "어제 만든 수량 버튼에 접근성 라벨 붙여줘" },
+  { "id": "ko-tests", "expect": "ko", "prompt": "테스트 돌려보고 실패하는 거 있으면 알려줘" },
+  { "id": "ko-chart", "expect": "ko", "prompt": "지난달 주문 CSV 읽어서 주별 매출 그래프 그려줘" },
+  { "id": "ko-ads", "expect": "ko", "prompt": "이번 주 광고 문구 세 개만 더 짧게 다듬어줘" },
+  { "id": "ko-minutes", "expect": "ko", "prompt": "회의록이 너무 길어서 아무도 안 읽는 것 같아. 핵심만 다섯 줄로 요약해줘. 내일 아침까지만 되면 돼." },
+  { "id": "ko-log", "expect": "ko", "prompt": "로그인하고 나면 가끔 빈 화면이 떠.\n[error] TypeError: Cannot read properties of undefined (reading 'name')\n이 에러 왜 나는지 찾아줘" }
+]
