@@ -13,9 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # tools/check.mjs가 PR의 커밋 메시지와 CHANGELOG를 대상 브랜치와 비교한다.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: node tools/check.mjs
       # mod API는 2.1.287부터 있다. 버전을 고정해서 Claude Code가 바뀌어도 CI가 갑자기 깨지지 않게 한다.
       - run: npm install -g @anthropic-ai/claude-code@2.1.311
       - run: claude plugin validate .
