@@ -68,9 +68,12 @@ export const EN_TASK = [
   'MODE: ENGLISH PROMPT',
   'Find real mistakes: grammar, wrong words, or phrasing a native speaker would find wrong or confusing.',
   'Ignore capital letters, final punctuation, typos inside code, and casual chat style.',
+  'Wrong grammar is always a mistake, even when the meaning is clear. But if a native speaker could have written',
+  'the sentence as it is, it has no mistakes. Another way to say it',
+  '(more polite like "Could you", "a" instead of "the", adding "please", shorter words) is not a mistake.',
   'If there are mistakes (at most 3, the most important first):',
   '{"fixes": [{"wrong": "exact text from the prompt", "right": "corrected text", "why": "한국어 이유 한 줄"}]}',
-  'If there are none, give one more natural way to say the main request:',
+  'If there are none, "fixes" is empty and "natural" gives one more natural way to say the main request:',
   '{"fixes": [], "natural": {"en": "natural expression", "ko": "한국어 뜻", "example": "short example sentence"}}',
 ].join('\n')
 
