@@ -71,9 +71,9 @@ export const register: Register = on => {
     const { Box } = $.ui.resolve(e)
     const now = await $.clock.now()
     const rows = notesPaneRows(await read($, notesView), now)
-    const room = Math.max(1, (e.viewport?.rows ?? 24) - 4)
 
-    return <Box flexDirection="column">{drawRows($.ui.resolve(e), rows.slice(0, room))}</Box>
+    // 노트가 패널보다 길면 패널이 스크롤한다. 잘라 내면 뒤쪽 노트는 볼 수 없다.
+    return <Box flexDirection="column">{drawRows($.ui.resolve(e), rows)}</Box>
   })
 
   on('prompt.submit', async ($, e, next) => {
