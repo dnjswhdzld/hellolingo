@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from 'claude-code/testing'
 import type { Engine, MockClock } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { DAY_MS, addPhrases, answerNote, asNotes, intake, pickDue } from '../hooks/notes'
+import { DAY_MS, addPhrases, answerNote, asNotes, intake, passOver, pickDue } from '../hooks/notes'
 import { notesPaneRows } from '../hooks/register'
 import { isInSentence, isKorean, parseCard, segments, translatedPart } from '../hooks/cards'
 import type { Note, Notes } from '../types'
@@ -597,6 +597,55 @@ describe('expression notebook and review quiz', () => {
     await ui.unmount()
   })
 
+  test('a quiz passed over gives way to another due phrase, even to one never answered', async ($, on) => {
+    const clock = mock.clock(on)
+    engine(on, () => KO_REPLY, {
+      notes: { answered: note('answered', '답한 것', { seenAt: 1, level: 1 }), fresh: note('fresh', '새것') },
+    })
+    const asked: string[] = []
+
+    await clock.advance(DAY_MS)
+
+    // 정답이 나오기 전에 답하지 않고 다음 프롬프트를 보낸다.
+    for (const text of ['응 해줘', '응 그것도', '그다음']) {
+      await $.prompt.submit(typed(text))
+      await clock.settle()
+      const ui = await $.ui.mount(QUIZ_BAND)
+
+      asked.push((await ui.find({ type: 'Text', text: /영어로 떠올려 보세요/ }))?.text ?? '')
+      await ui.unmount()
+      await clock.advance(1000)
+    }
+
+    expect(asked).toEqual([
+      '"답한 것" — 영어로 떠올려 보세요',
+      '"새것" — 영어로 떠올려 보세요',
+      '"답한 것" — 영어로 떠올려 보세요',
+    ])
+  })
+
+  test('a quiz passed over after its answer showed comes back the next day, at the same interval', async ($, on) => {
+    const clock = mock.clock(on)
+    const stored: Record<string, unknown> = {
+      notes: { answered: note('answered', '답한 것', { seenAt: 1, level: 1 }) },
+    }
+    engine(on, () => KO_REPLY, stored)
+
+    await clock.advance(DAY_MS)
+    await $.prompt.submit(typed('응 해줘'))
+    await clock.settle()
+    await clock.advance(10_000)
+    await $.prompt.submit(typed('응 그것도'))
+    await clock.settle()
+
+    expect(asNotes(stored.notes).answered).toMatchObject({ level: 1, dueAt: 2 * DAY_MS + 10_000 })
+
+    const ui = await $.ui.mount(QUIZ_BAND)
+
+    expect(await ui.find({ type: 'Box', key: 'quiz' })).toBeUndefined()
+    await ui.unmount()
+  })
+
   test('a slash command keeps the quiz on screen', async ($, on) => {
     const clock = mock.clock(on)
     engine(on, () => KO_REPLY)
@@ -721,6 +770,28 @@ describe('local helpers', () => {
 
     expect(pickDue(notes, 10)?.en).toBe('answered')
     expect(pickDue({ fresh: notes.fresh }, 10)?.en).toBe('fresh')
+  })
+
+  test('a phrase shown and passed over since its last answer goes behind the other due phrases', async () => {
+    const notes = {
+      fresh: note('fresh', '새것'),
+      passed: note('passed', '넘긴 것', { seenAt: 5, shownAt: 8, level: 1 }),
+      older: note('older', '먼저 넘긴 것', { shownAt: 6 }),
+    }
+
+    expect(pickDue(notes, 10)?.en).toBe('fresh')
+    expect(pickDue({ passed: notes.passed, older: notes.older }, 10)?.en).toBe('older')
+  })
+
+  test('passing over waits a day only for a phrase still due', async () => {
+    const notes = {
+      due: note('due', '복습할 것', { level: 2 }),
+      later: note('later', '나중', { dueAt: 3 * DAY_MS }),
+    }
+
+    expect(passOver(notes, 'due', 10).due).toMatchObject({ level: 2, dueAt: 10 + DAY_MS })
+    expect(passOver(notes, 'later', 10)).toBe(notes)
+    expect(passOver(notes, 'gone', 10)).toBe(notes)
   })
 
   test('new expressions stop at 5 a day, and while 10 reviews are due; the notes pane says why', async () => {

@@ -14,7 +14,7 @@ import type { Card, Layer, Notes, Phrase, Quiz, SentenceMap } from '../types'
 import { isKorean, notNull, parseCard, segments } from './cards'
 import type { Segment } from './cards'
 import { EFFORT, MODEL, SYSTEM, cardPrompt } from './prompts'
-import { DAY_MS, MAX_DUE, NEW_PER_DAY, addPhrases, answerNote, asNotes, intake, markShown, noteId, pickDue } from './notes'
+import { DAY_MS, MAX_DUE, NEW_PER_DAY, addPhrases, answerNote, asNotes, intake, markShown, noteId, passOver, pickDue } from './notes'
 
 const layer = atom({ plugin: 'hellolingo', key: 'layer' } as const, { card: null, cardSeq: 0, pendingSeq: null })
 const quiz = atom({ plugin: 'hellolingo', key: 'quiz' } as const, null)
@@ -93,7 +93,15 @@ export const register: Register = on => {
       // 짧은 프롬프트에도 Claude는 작업하니, 그동안 복습할 표현이 있으면 퀴즈를 낸다.
       if (isPersonPrompt(e)) {
         // 카드는 지우지 않는다. 지난 턴의 퀴즈만 거둔다.
+        const left = await read($, quiz)
+
         await update($, quiz, () => null)
+
+        // 정답이 나왔는데 답하지 않고 넘긴 퀴즈는 하루 뒤로 미룬다. 새 퀴즈를 고르기 전에 저장하도록 먼저 줄 세운다.
+        if (left !== null && left.isRevealed && left.answer === null && !answering.has(left.id)) {
+          void changeNotes($, (notes, now) => [passOver(notes, left.noteId, now), undefined]).catch(() => undefined)
+        }
+
         $.clock.after(0, () => {
           void startQuiz($, mine)
         })
