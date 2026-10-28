@@ -34,6 +34,10 @@ hellolingo는 Claude Code 플러그인입니다. Claude Code의 mod 기능으로
 받은 폴더 안에서 실행합니다. Claude Code v2.1.311 이상이 필요합니다.
 
 ```bash
+node tools/check.mjs
+```
+
+```bash
 claude plugin validate .
 ```
 
@@ -41,7 +45,7 @@ claude plugin validate .
 claude plugin test .
 ```
 
-`claude plugin test`는 `tests/` 아래의 `*.test.tsx`를 모두 돌립니다. 테스트는 모델 호출에 가짜 답을 돌려주므로 API를 부르지 않고, 로그인도 필요 없습니다. 풀 리퀘스트마다 GitHub Actions가 이 두 명령을 돌립니다.
+`claude plugin test`는 `tests/` 아래의 `*.test.tsx`를 모두 돌립니다. 테스트는 모델 호출에 가짜 답을 돌려주므로 API를 부르지 않고, 로그인도 필요 없습니다. `tools/check.mjs`는 개인 정보, 문서 링크, 그림 크기, 버전, 커밋 메시지, CHANGELOG를 봅니다. 풀 리퀘스트마다 GitHub Actions가 이 세 명령을 돌립니다.
 
 타입 검사에는 `.claude-plugin/types/`가 필요합니다. Claude Code가 이 폴더를 mod로 한 번 불러오면 만들어 주고, `.gitignore`에 들어 있어서 커밋되지 않습니다. 그 뒤에 실행합니다.
 
@@ -64,7 +68,8 @@ npx --yes -p typescript@5.6.3 tsc -p tsconfig.json
 
 ## 풀 리퀘스트
 
-- `claude plugin validate .`와 `claude plugin test .`가 통과해야 합니다.
+- `node tools/check.mjs`, `claude plugin validate .`, `claude plugin test .`가 통과해야 합니다.
+- 에이전트와 함께 PR을 준비한다면 [PR 전 점검](.claude/skills/pr-check/SKILL.md)을 따르게 합니다. Claude Code는 이 저장소에서 이 스킬을 알아서 씁니다.
 - 사용자가 알아챌 변화는 `CHANGELOG.md` 맨 위에 `## 다음 버전` 제목을 두고 그 아래에 한 줄씩 적습니다. 맨 위 버전에 아직 태그가 없으면, 그 버전 아래에 적습니다.
 
 ## 릴리스
