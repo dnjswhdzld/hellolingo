@@ -13,7 +13,7 @@ import type { ElementTable, EngineInterface, PromptSubmitInput, Register } from 
 import type { Card, Layer, Notes, Phrase, Quiz, SentenceMap } from '../types'
 import { isKorean, notNull, parseCard, segments } from './cards'
 import type { Segment } from './cards'
-import { EN_TASK, KO_TASK, SYSTEM } from './prompts'
+import { EFFORT, MODEL, SYSTEM, cardPrompt } from './prompts'
 import { DAY_MS, MAX_DUE, NEW_PER_DAY, addPhrases, answerNote, asNotes, intake, markShown, noteId, pickDue } from './notes'
 
 const layer = atom({ plugin: 'hellolingo', key: 'layer' } as const, { card: null, cardSeq: 0, pendingSeq: null })
@@ -25,7 +25,6 @@ const NOTES_KEY = 'notes'
 const NOTES_PANE = 'lingo-notes'
 const REVEAL_MS = 10_000 // 퀴즈를 내고 이만큼 지나면 정답을 보여준다. 천천히 읽는 사람도 떠올려 볼 틈이 있게
 
-const MODEL = 'haiku' // 가장 저렴한 모델
 const MIN_CHARS = 10
 const MAX_INPUT_CHARS = 1500 // 긴 붙여넣기는 앞부분만 보낸다 (비용)
 const MAX_TOKENS = 800 // 짝짓기까지 담은 JSON이 잘리지 않게
@@ -229,9 +228,9 @@ async function makeCard($: EngineInterface, text: string): Promise<Card | null> 
   const r = await $.model.complete({
     model: MODEL,
     system: SYSTEM,
-    prompt: `${korean ? KO_TASK : EN_TASK}\n\nPROMPT:\n<<<\n${text}\n>>>`,
+    prompt: cardPrompt(korean, text),
     maxTokens: MAX_TOKENS,
-    effort: 'low',
+    effort: EFFORT,
     timeoutMs: TIMEOUT_MS,
   })
 
