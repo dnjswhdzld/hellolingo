@@ -38,7 +38,7 @@ export function parseCard(korean: boolean, reply: string, prompt: string): Card 
     return { kind: 'ko', english, original, parts: matchedParts(data, original, english), phrases: phrasesIn(data, english) }
   }
 
-  const fixes = list(data.fixes).map(toFix).filter(notNull).slice(0, 3)
+  const fixes = narrowest(list(data.fixes).map(toFix).filter(notNull)).slice(0, 3)
 
   if (fixes.length > 0) {
     return { kind: 'en-fix', fixes }
@@ -47,6 +47,14 @@ export function parseCard(korean: boolean, reply: string, prompt: string): Card 
   const phrase = toPhrase(data.natural)
 
   return phrase === null ? null : { kind: 'en-natural', phrase }
+}
+
+/** 고칠 곳이 겹치면 좁은 쪽만 남긴다. "run test again"을 고쳤으면, 그 말을 품은 문장 전체를 고친 줄은 뺀다. */
+function narrowest(fixes: readonly Fix[]): Fix[] {
+  const key = (f: Fix) => f.wrong.toLowerCase()
+  const unique = fixes.filter((f, i) => fixes.findIndex(g => key(g) === key(f)) === i)
+
+  return unique.filter(f => !unique.some(g => g !== f && key(f).includes(key(g))))
 }
 
 /**
@@ -229,7 +237,8 @@ function toPart(v: unknown): Part | null {
   const ko = str(v.ko)
   const en = str(v.en)
 
-  return ko === null || en === null ? null : { ko, en }
+  // "확인해줘"를 영어 끝의 "."와 짝짓는 답도 온다. 글자가 없는 조각은 짝이 아니다.
+  return ko === null || en === null || !hasWord(ko) || !hasWord(en) ? null : { ko, en }
 }
 
 function toPhrase(v: unknown): Phrase | null {
@@ -256,6 +265,10 @@ function toFix(v: unknown): Fix | null {
   }
 
   return { wrong, right, why: str(v.why) ?? '' }
+}
+
+function hasWord(s: string): boolean {
+  return /[\p{L}\p{N}]/u.test(s)
 }
 
 function isObject(v: unknown): v is Record<string, unknown> {

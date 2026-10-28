@@ -1,0 +1,151 @@
+{
+ "project": "shop-web",
+ "source": "shop-web-day2",
+ "time": "09:30",
+ "size": [
+  100,
+  42
+ ],
+ "card_delay": 2.0,
+ "notes": [
+  {
+   "en": "make sure",
+   "ko": "꼭 ~하게 하다",
+   "example": "Make sure the tests pass.",
+   "added": -1.06,
+   "due": -0.06
+  },
+  {
+   "en": "take a look",
+   "ko": "한번 봐 주다",
+   "example": "Can you take a look at this PR?",
+   "added": -1.05,
+   "due": -0.05
+  },
+  {
+   "en": "Create a button",
+   "ko": "버튼을 만들다",
+   "example": "Can you create a button for the login page?",
+   "added": -1.04,
+   "due": -0.04
+  },
+  {
+   "en": "when the quantity becomes 0",
+   "ko": "수량이 0이 되면",
+   "example": "Show a warning when the stock becomes low.",
+   "added": -1.03,
+   "due": -0.03
+  },
+  {
+   "en": "look too small",
+   "ko": "너무 작아 보여",
+   "example": "This font looks too small on my phone.",
+   "added": -1.02,
+   "due": -0.02
+  }
+ ],
+ "turns": [
+  {
+   "user": "어제 만든 수량 버튼에 접근성 라벨 붙여줘",
+   "steps": [
+    {
+     "say": "어제 만든 버튼을 볼게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.tsx"
+     },
+     "delay": 4.0
+    },
+    {
+     "say": "화면 낭독기가 버튼의 뜻을 읽을 수 있게 라벨을 붙입니다.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.tsx",
+      "old_string": "        <button onClick={() => onChangeQuantity(line.id, line.quantity - 1)}>−</button>\n        <span>{line.quantity}</span>\n        <button onClick={() => onChangeQuantity(line.id, line.quantity + 1)}>+</button>",
+      "new_string": "        <button aria-label=\"수량 줄이기\" onClick={() => onChangeQuantity(line.id, line.quantity - 1)}>\n          −\n        </button>\n        <span aria-live=\"polite\">{line.quantity}</span>\n        <button aria-label=\"수량 늘리기\" onClick={() => onChangeQuantity(line.id, line.quantity + 1)}>\n          +\n        </button>"
+     },
+     "delay": 6.0
+    },
+    {
+     "text": "− / + 버튼에 `aria-label`을 붙였습니다. 화면 낭독기가 \"수량 줄이기\", \"수량 늘리기\"라고 읽습니다. 수량이 바뀌면 바뀐 숫자도 읽어 줍니다.",
+     "delay": 4.0
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "say": "어제 만든 수량 버튼에 접근성 라벨 붙여줘"
+  },
+  {
+   "wait": "영어로 떠올려 보세요"
+  },
+  {
+   "gone": "영어로 옮기는 중"
+  },
+  {
+   "sleep": 0.8
+  },
+  {
+   "shot": "recall-1-quiz"
+  },
+  {
+   "gone": "초 뒤에 정답이",
+   "timeout": 20
+  },
+  {
+   "sleep": 0.5
+  },
+  {
+   "shot": "recall-2-answer"
+  },
+  {
+   "wait": "숫자도 읽어 줍니다"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "keys": [
+    "C-x"
+   ]
+  },
+  {
+   "sleep": 0.3
+  },
+  {
+   "keys": [
+    "Tab"
+   ]
+  },
+  {
+   "sleep": 0.5
+  },
+  {
+   "keys": [
+    "o"
+   ]
+  },
+  {
+   "wait": "다시 볼게요"
+  },
+  {
+   "sleep": 0.8
+  },
+  {
+   "shot": "recall-3-done"
+  },
+  {
+   "resize": [
+    64,
+    42
+   ]
+  },
+  {
+   "sleep": 1.5
+  },
+  {
+   "shot": "narrow-window"
+  }
+ ]
+}

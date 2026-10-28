@@ -1,6 +1,6 @@
 # 기여하기
 
-hellolingo는 Claude Code mod입니다. 코드는 `hooks/`에, 타입은 `types/`에, 테스트는 `tests/`에 있습니다. `hooks/register.tsx`가 훅을 등록하고, 나머지 파일은 값만 다루는 함수와 모델에 보내는 지시문입니다.
+hellolingo는 Claude Code 플러그인입니다. Claude Code의 mod 기능으로 만들어서, 아래에서는 mod라고 부릅니다. 코드는 `hooks/`에, 타입은 `types/`에, 테스트는 `tests/`에 있습니다. `hooks/register.tsx`가 훅을 등록하고, 나머지 파일은 값만 다루는 함수와 모델에 보내는 지시문입니다.
 
 먼저 읽을 문서는 둘입니다.
 
@@ -31,7 +31,7 @@ hellolingo는 Claude Code mod입니다. 코드는 `hooks/`에, 타입은 `types/
 
 ## 확인 명령
 
-받은 폴더 안에서 실행합니다. Claude Code v2.1.287 이상이 필요합니다.
+받은 폴더 안에서 실행합니다. Claude Code v2.1.311 이상이 필요합니다.
 
 ```bash
 claude plugin validate .
@@ -54,14 +54,16 @@ npx --yes -p typescript@5.6.3 tsc -p tsconfig.json
 - Claude의 응답, 코드, 커밋 메시지, 파일은 바꾸지 않습니다. 이 mod는 읽기만 합니다.
 - 학습 기능이 실패해도 프롬프트는 그대로 지나가야 합니다. 훅마다 `.catch`로 원래 흐름을 잇습니다.
 - 카드 테두리 안에는 이모지를 쓰지 않습니다. 터미널마다 이모지 폭을 다르게 세서 오른쪽 테두리가 어긋납니다.
+- 줄을 들여 쓸 때는 글 앞에 공백을 붙이지 않고 `indent`를 줍니다. 공백으로 들여 쓰면 줄이 넘칠 때 다음 줄이 맨 앞에서 시작합니다.
 - 화면에 나오는 글과 모델이 쓰는 한국어는 [학습 설계와 근거](docs/learning-design.md#글쓰기-규칙)의 글쓰기 규칙을 따릅니다. 한 문장에 한 생각, 문법 용어 없이, 가장 중요한 것을 먼저 씁니다.
 - 카드에 줄을 더하는 변경은 그 줄이 배우는 데 어떻게 도움이 되는지 풀 리퀘스트에 적습니다. [로드맵](ROADMAP.md)의 "하지 않는 것"도 확인합니다.
 - 동작을 바꾸면 그 동작을 확인하는 테스트도 같이 고칩니다.
+- 화면이 바뀌면 [가이드](docs/guide/README.md)의 화면도 다시 찍습니다. 방법은 [tools/screenshots](tools/screenshots/README.md)에 있습니다.
 
 ## 풀 리퀘스트
 
 - `claude plugin validate .`와 `claude plugin test .`가 통과해야 합니다.
-- 사용자가 알아챌 변화는 `CHANGELOG.md` 맨 위에 `## 다음 버전` 제목을 두고 그 아래에 한 줄씩 적습니다.
+- 사용자가 알아챌 변화는 `CHANGELOG.md` 맨 위에 `## 다음 버전` 제목을 두고 그 아래에 한 줄씩 적습니다. 맨 위 버전에 아직 태그가 없으면, 그 버전 아래에 적습니다.
 
 ## 릴리스
 

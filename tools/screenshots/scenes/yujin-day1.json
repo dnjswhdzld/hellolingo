@@ -1,0 +1,293 @@
+{
+ "project": "shop-web",
+ "time": "10:20",
+ "size": [
+  100,
+  42
+ ],
+ "card_delay": 2.0,
+ "notes": [
+  {
+   "en": "take a look",
+   "ko": "한번 봐 주다",
+   "example": "Can you take a look at this PR?",
+   "added": -0.1,
+   "due": 0.9
+  },
+  {
+   "en": "make sure",
+   "ko": "꼭 ~하게 하다",
+   "example": "Make sure the tests pass.",
+   "added": -0.08,
+   "due": 0.92
+  }
+ ],
+ "turns": [
+  {
+   "user": "장바구니에서 수량 바꾸는 버튼 만들어줘",
+   "steps": [
+    {
+     "say": "장바구니 코드부터 볼게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.tsx"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/src/lib/cart.ts"
+     },
+     "delay": 1.2
+    },
+    {
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/src/components/Cart.tsx"
+     },
+     "delay": 1.2
+    },
+    {
+     "say": "수량을 바꾸는 함수를 먼저 추가합니다.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/lib/cart.ts",
+      "old_string": "export function total(",
+      "new_string": "export function setQuantity(lines: CartLine[], id: string, quantity: number): CartLine[] {\n  return lines.map(l => (l.id === id ? { ...l, quantity } : l))\n}\n\nexport function total("
+     },
+     "delay": 3.0
+    },
+    {
+     "say": "화면에 − / + 버튼을 붙입니다.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.tsx",
+      "old_string": "  onRemove: (id: string) => void\n}\n\nexport function CartItem({ line, onRemove }: Props) {\n  return (\n    <li className={styles.item}>\n      <span className={styles.name}>{line.name}</span>\n      <span className={styles.quantity}>{line.quantity}개</span>\n",
+      "new_string": "  onRemove: (id: string) => void\n  onChangeQuantity: (id: string, quantity: number) => void\n}\n\nexport function CartItem({ line, onRemove, onChangeQuantity }: Props) {\n  return (\n    <li className={styles.item}>\n      <span className={styles.name}>{line.name}</span>\n      <span className={styles.stepper}>\n        <button onClick={() => onChangeQuantity(line.id, line.quantity - 1)}>−</button>\n        <span>{line.quantity}</span>\n        <button onClick={() => onChangeQuantity(line.id, line.quantity + 1)}>+</button>\n      </span>\n"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/components/Cart.tsx",
+      "old_string": "import { removeItem, total, type CartLine } from '../lib/cart'",
+      "new_string": "import { removeItem, setQuantity, total, type CartLine } from '../lib/cart'"
+     },
+     "delay": 1.5
+    },
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/components/Cart.tsx",
+      "old_string": "          <CartItem key={line.id} line={line} onRemove={id => setLines(removeItem(lines, id))} />",
+      "new_string": "          <CartItem\n            key={line.id}\n            line={line}\n            onRemove={id => setLines(removeItem(lines, id))}\n            onChangeQuantity={(id, quantity) => setLines(setQuantity(lines, id, quantity))}\n          />"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "수량 버튼을 만들었습니다.\n\n- `cart.ts`에 수량을 바꾸는 `setQuantity`를 추가했습니다.\n- `CartItem`에 − / + 버튼을 붙였습니다.\n- `Cart`에서 버튼을 누르면 수량이 바뀌게 연결했습니다.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "수량이 0이 되면 장바구니에서 빼줘",
+   "steps": [
+    {
+     "say": "`setQuantity`에서 0 이하를 처리할게요.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/lib/cart.ts",
+      "old_string": "  return lines.map(l => (l.id === id ? { ...l, quantity } : l))",
+      "new_string": "  if (quantity <= 0) {\n    return removeItem(lines, id)\n  }\n  return lines.map(l => (l.id === id ? { ...l, quantity } : l))"
+     },
+     "delay": 3.0
+    },
+    {
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/test/cart.ts"
+     },
+     "delay": 1.2
+    },
+    {
+     "say": "테스트도 하나 추가합니다.",
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/test/cart.ts",
+      "old_string": "import { addItem, removeItem, total } from '../src/lib/cart.ts'",
+      "new_string": "import { addItem, removeItem, setQuantity, total } from '../src/lib/cart.ts'"
+     },
+     "delay": 1.5
+    },
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/test/cart.ts",
+      "old_string": "  assert.equal(total(addItem(addItem(addItem([], tee), tee), cap)), 63000)\n})",
+      "new_string": "  assert.equal(total(addItem(addItem(addItem([], tee), tee), cap)), 63000)\n})\n\ntest('수량을 0으로 바꾸면 장바구니에서 빠진다', () => {\n  assert.deepEqual(setQuantity(addItem([], tee), 'tee', 0), [])\n})"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "수량이 0 이하가 되면 그 상품을 장바구니에서 뺍니다. 이 경우를 확인하는 테스트도 하나 추가했습니다.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "모바일에서 버튼이 너무 작아 보여",
+   "steps": [
+    {
+     "say": "버튼 스타일을 볼게요.",
+     "tool": "Read",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.module.css"
+     },
+     "delay": 2.5
+    },
+    {
+     "tool": "Edit",
+     "input": {
+      "file_path": "{project}/src/components/CartItem.module.css",
+      "old_string": ".price {",
+      "new_string": ".stepper {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n\n.stepper button {\n  min-width: 44px;\n  min-height: 44px;\n  font-size: 18px;\n}\n\n.price {"
+     },
+     "delay": 3.0
+    },
+    {
+     "text": "− / + 버튼을 가로세로 44px 이상으로 키웠습니다. 손가락으로 누르기 좋은 크기입니다.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "테스트 돌려서 다 통과하는지 확인해줘",
+   "steps": [
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "npm test",
+      "description": "테스트 실행"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "테스트 4개가 모두 통과했습니다.",
+     "delay": 2.0
+    }
+   ]
+  },
+  {
+   "user": "좋아 커밋해줘",
+   "steps": [
+    {
+     "tool": "Bash",
+     "input": {
+      "command": "git add -A && git commit -m \"장바구니 수량 버튼 추가\"",
+      "description": "변경 사항 커밋"
+     },
+     "delay": 2.0
+    },
+    {
+     "text": "커밋했습니다.",
+     "delay": 1.0
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "say": "장바구니에서 수량 바꾸는 버튼 만들어줘"
+  },
+  {
+   "wait": "영어로 옮기는 중"
+  },
+  {
+   "shot": "see-1-pending"
+  },
+  {
+   "gone": "영어로 옮기는 중"
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "see-2-card"
+  },
+  {
+   "wait": "바뀌게 연결했습니다"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "수량이 0이 되면 장바구니에서 빼줘"
+  },
+  {
+   "wait": "다음 문장 옮기는 중"
+  },
+  {
+   "shot": "see-3-next-pending"
+  },
+  {
+   "gone": "다음 문장 옮기는 중"
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "see-4-next-card"
+  },
+  {
+   "wait": "테스트도 하나 추가했습니다."
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "모바일에서 버튼이 너무 작아 보여. 좀 키워줘"
+  },
+  {
+   "wait": "누르기 좋은 크기입니다"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "테스트 돌려서 다 통과하는지 확인해줘"
+  },
+  {
+   "wait": "모두 통과했습니다"
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "say": "좋아 커밋해줘"
+  },
+  {
+   "wait": "커밋했습니다."
+  },
+  {
+   "sleep": 1.5
+  },
+  {
+   "shot": "see-5-short-reply"
+  },
+  {
+   "say": "/lingo-notes"
+  },
+  {
+   "wait": "모두 "
+  },
+  {
+   "sleep": 1.0
+  },
+  {
+   "shot": "collect-1-notes"
+  }
+ ]
+}

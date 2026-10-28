@@ -1,0 +1,327 @@
+{
+  "장바구니에서 수량 바꾸는 버튼 만들어줘": {
+    "original": "장바구니에서 수량 바꾸는 버튼 만들어줘",
+    "english": "Create a button to change the quantity in the cart.",
+    "parts": [
+      {
+        "ko": "장바구니에서",
+        "en": "in the cart"
+      },
+      {
+        "ko": "수량 바꾸는",
+        "en": "to change the quantity"
+      },
+      {
+        "ko": "버튼",
+        "en": "a button"
+      },
+      {
+        "ko": "만들어줘",
+        "en": "Create"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "Create a button",
+        "ko": "버튼을 만들다",
+        "example": "Can you create a button for the login page?"
+      }
+    ]
+  },
+  "수량이 0이 되면 장바구니에서 빼줘": {
+    "original": "수량이 0이 되면 장바구니에서 빼줘",
+    "english": "Remove it from the cart when the quantity becomes 0.",
+    "parts": [
+      {
+        "ko": "수량이 0이 되면",
+        "en": "when the quantity becomes 0"
+      },
+      {
+        "ko": "장바구니에서",
+        "en": "from the cart"
+      },
+      {
+        "ko": "빼줘",
+        "en": "Remove it"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "when the quantity becomes 0",
+        "ko": "수량이 0이 되면",
+        "example": "Show a warning when the stock becomes low."
+      }
+    ]
+  },
+  "모바일에서 버튼이 너무 작아 보여. 좀 키워줘": {
+    "original": "모바일에서 버튼이 너무 작아 보여. 좀 키워줘",
+    "english": "The buttons look too small on mobile. Make them bigger.",
+    "parts": [
+      {
+        "ko": "모바일에서",
+        "en": "on mobile"
+      },
+      {
+        "ko": "버튼이",
+        "en": "The buttons"
+      },
+      {
+        "ko": "너무 작아 보여",
+        "en": "look too small"
+      },
+      {
+        "ko": "좀 키워줘",
+        "en": "Make them bigger"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "look too small",
+        "ko": "너무 작아 보여",
+        "example": "This font looks too small on my phone."
+      }
+    ]
+  },
+  "테스트 돌려서 다 통과하는지 확인해줘": {
+    "original": "테스트 돌려서 다 통과하는지 확인해줘",
+    "english": "Run the tests and make sure they all pass.",
+    "parts": [
+      {
+        "ko": "테스트 돌려서",
+        "en": "Run the tests and"
+      },
+      {
+        "ko": "다 통과하는지",
+        "en": "make sure they all pass"
+      },
+      {
+        "ko": "확인해줘",
+        "en": "."
+      }
+    ],
+    "phrases": [
+      {
+        "en": "make sure",
+        "ko": "확실히 ~하도록 확인하다",
+        "example": "Make sure the door is locked."
+      }
+    ]
+  },
+  "어제 만든 수량 버튼에 접근성 라벨 붙여줘": {
+    "original": "어제 만든 수량 버튼에 접근성 라벨 붙여줘",
+    "english": "Add an accessibility label to the quantity button I made yesterday.",
+    "parts": [
+      {
+        "ko": "어제 만든",
+        "en": "I made yesterday"
+      },
+      {
+        "ko": "수량 버튼에",
+        "en": "the quantity button"
+      },
+      {
+        "ko": "접근성 라벨",
+        "en": "an accessibility label"
+      },
+      {
+        "ko": "붙여줘",
+        "en": "Add"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "Add an accessibility label",
+        "ko": "접근성 라벨을 붙이다",
+        "example": "Add an accessibility label to the logo."
+      }
+    ]
+  },
+  "2026-10-27 14:02:11,483 ERROR pay_api.approve approve failed order=A-10293\nTraceback (most recent call last):\nFile \"/srv/pay-api/pay_api/approve.py\", line 11, in approve\nresult = client.approve(order['amount'], timeout=PG_TIMEOUT_SECONDS)\nFile \"/srv/pay-api/pay_api/client.py\", line 11, in approve\nraise TimeoutError(f'PG did not answer in {timeout}s')\nTimeoutError: PG did not answer in 3s\n어제 배포한 뒤로 결제 승인이 가끔 500 에러를 내. 원인이 뭔지 찾아서 알려줘": {
+    "original": "원인이 뭔지 찾아서 알려줘",
+    "english": "Find the cause and let me know.",
+    "parts": [
+      {
+        "ko": "찾아서",
+        "en": "Find"
+      },
+      {
+        "ko": "원인이 뭔지",
+        "en": "the cause"
+      },
+      {
+        "ko": "알려줘",
+        "en": "let me know"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "let me know",
+        "ko": "알려 주다",
+        "example": "Let me know when the test is done."
+      }
+    ]
+  },
+  "재현하는 테스트부터 써줘": {
+    "original": "재현하는 테스트부터 써줘",
+    "english": "Write a reproducing test first.",
+    "parts": [
+      {
+        "ko": "재현하는 테스트부터",
+        "en": "a reproducing test first"
+      },
+      {
+        "ko": "써줘",
+        "en": "Write"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "Write a test first",
+        "ko": "먼저 테스트를 작성해 달라는 뜻",
+        "example": "Please write a test first before you change the code."
+      }
+    ]
+  },
+  "Please fix it and run test again": {
+    "fixes": [
+      {
+        "wrong": "run test again",
+        "right": "run the tests again",
+        "why": "test 앞에는 the를 붙이고, 여러 개를 말할 때는 test 뒤에 s를 붙여요."
+      }
+    ]
+  },
+  "Can you write the PR description?": {
+    "fixes": [],
+    "natural": {
+      "en": "Could you draft the PR description?",
+      "ko": "PR 설명 초안 좀 써 줄 수 있어요?",
+      "example": "Could you draft a PR description for these changes?"
+    }
+  },
+  "지난달 주문 CSV 읽어서 주별 매출 그래프 그려줘": {
+    "original": "지난달 주문 CSV 읽어서 주별 매출 그래프 그려줘",
+    "english": "Read the orders CSV and draw a weekly sales graph.",
+    "parts": [
+      {
+        "ko": "주문 CSV 읽어서",
+        "en": "Read the orders CSV and"
+      },
+      {
+        "ko": "주별 매출 그래프",
+        "en": "a weekly sales graph"
+      },
+      {
+        "ko": "그려줘",
+        "en": "draw"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "Can you draw",
+        "ko": "그려줄 수 있어?",
+        "example": "Can you draw a chart of the monthly costs?"
+      }
+    ]
+  },
+  "환불된 주문은 빼고 다시 그려줘": {
+    "original": "환불된 주문은 빼고 다시 그려줘",
+    "english": "Redraw it without the refunded orders.",
+    "parts": [
+      {
+        "ko": "환불된 주문은",
+        "en": "the refunded orders"
+      },
+      {
+        "ko": "빼고",
+        "en": "without"
+      },
+      {
+        "ko": "다시 그려줘",
+        "en": "Redraw it"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "without the",
+        "ko": "~은 빼고",
+        "example": "Send it to me without the attachment."
+      }
+    ]
+  },
+  "광고 문구 CSV에서 클릭률 1% 아래인 것만 골라줘": {
+    "original": "광고 문구 CSV에서 클릭률 1% 아래인 것만 골라줘",
+    "english": "In the ad copy CSV, pick only the ones with a click rate below 1%.",
+    "parts": [
+      {
+        "ko": "광고 문구 CSV에서",
+        "en": "In the ad copy CSV"
+      },
+      {
+        "ko": "클릭률 1% 아래인 것만",
+        "en": "only the ones with a click rate below 1%"
+      },
+      {
+        "ko": "골라줘",
+        "en": "pick"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "pick only the ones",
+        "ko": "~만 골라줘",
+        "example": "Pick only the files with errors."
+      }
+    ]
+  },
+  "결과를 새 CSV로 저장해줘": {
+    "original": "결과를 새 CSV로 저장해줘",
+    "english": "Save the results to a new CSV.",
+    "parts": [
+      {
+        "ko": "결과를",
+        "en": "the results"
+      },
+      {
+        "ko": "새 CSV로",
+        "en": "to a new CSV"
+      },
+      {
+        "ko": "저장해줘",
+        "en": "Save"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "Save the results",
+        "ko": "결과를 저장해",
+        "example": "Please save the results to a file."
+      }
+    ]
+  },
+  "고른 것마다 새 문구 3개씩 써줘. 30자 넘지 않게": {
+    "original": "고른 것마다 새 문구 3개씩 써줘.",
+    "english": "Write 3 new phrases for each one you picked.",
+    "parts": [
+      {
+        "ko": "고른 것마다",
+        "en": "for each one you picked"
+      },
+      {
+        "ko": "새 문구 3개씩",
+        "en": "3 new phrases"
+      },
+      {
+        "ko": "써줘",
+        "en": "Write"
+      }
+    ],
+    "phrases": [
+      {
+        "en": "for each one you picked",
+        "ko": "고른 것 하나하나마다",
+        "example": "Check the price for each one you picked."
+      }
+    ]
+  }
+}
