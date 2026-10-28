@@ -733,6 +733,32 @@ describe('expression notebook and review quiz', () => {
       await ui.unmount()
     }
   })
+
+  test('/lingo-notes lists every note, and the pane scrolls through them', async ($, on) => {
+    mock.clock(on)
+    const many = Array.from({ length: 30 }, (_, i) => note(`phrase ${i}`, `뜻 ${i}`, { dueAt: i * DAY_MS }))
+    engine(on, () => KO_REPLY, { notes: Object.fromEntries(many.map(n => [n.en, n])) })
+
+    await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+    const ui = await $.ui.mount({
+      plugin: 'hellolingo',
+      component: 'Pane',
+      requestId: 'lingo-notes',
+      surface: 'terminal',
+      props: {
+        title: '표현 노트',
+        isFocused: false,
+        bodyColumns: 60,
+        placement: 'inline',
+        scroll: { offset: 0, bodyRows: 10 },
+        view: {},
+      },
+    })
+
+    expect(await ui.find({ type: 'Text', text: /모두 30개/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /• phrase 29 — 뜻 29/ })).toBeDefined()
+    await ui.unmount()
+  })
 })
 
 describe('local helpers', () => {
