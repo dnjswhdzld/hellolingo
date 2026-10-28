@@ -74,15 +74,26 @@ export function addPhrases(notes: Notes, phrases: readonly Phrase[], now: number
 }
 
 /**
- * 복습할 때가 된 표현 하나. 퀴즈에 답한 적 있는 표현을 처음 보는 표현보다 먼저 낸다: 새 표현이 계속
- * 들어와도 3일, 7일 뒤 복습이 밀리지 않게. 같은 무리 안에서는 아직 퀴즈에 안 낸 것, 낸 지 오래된 것,
- * 복습 날이 이른 것부터.
+ * 복습할 때가 된 표현 하나. 마지막으로 답한 뒤 퀴즈로 냈는데 답하지 않고 넘긴 표현은 맨 뒤로 보내고,
+ * 그것끼리는 넘긴 지 오래된 것부터 돌아가며 낸다: 넘긴 퀴즈가 다음 프롬프트에 또 나오지 않게.
+ * 나머지는 퀴즈에 답한 적 있는 표현을 처음 보는 표현보다 먼저 낸다: 새 표현이 계속 들어와도 3일, 7일 뒤
+ * 복습이 밀리지 않게. 같은 무리 안에서는 아직 퀴즈에 안 낸 것, 낸 지 오래된 것, 복습 날이 이른 것부터.
  */
 export function pickDue(notes: Notes, now: number): Note | null {
   const due = Object.values(notes).filter(n => n.dueAt <= now)
+  const passedAt = (n: Note) => (n.shownAt !== null && n.shownAt > n.seenAt ? n.shownAt : null)
   const isNew = (n: Note) => (n.seenAt > n.addedAt ? 0 : 1)
 
-  due.sort((a, b) => isNew(a) - isNew(b) || (a.shownAt ?? -1) - (b.shownAt ?? -1) || a.dueAt - b.dueAt)
+  due.sort((a, b) => {
+    const pa = passedAt(a)
+    const pb = passedAt(b)
+
+    if (pa !== null || pb !== null) {
+      return pa === null ? -1 : pb === null ? 1 : pa - pb
+    }
+
+    return isNew(a) - isNew(b) || (a.shownAt ?? -1) - (b.shownAt ?? -1) || a.dueAt - b.dueAt
+  })
 
   return due[0] ?? null
 }
@@ -92,6 +103,17 @@ export function markShown(notes: Notes, id: string, now: number): Notes {
   const note = notes[id]
 
   return note === undefined ? notes : { ...notes, [id]: { ...note, shownAt: now } }
+}
+
+/**
+ * 정답을 보고도 답하지 않고 넘긴 표현은 하루 뒤에 다시 낸다. 간격(칸)은 그대로 둔다: 떠올렸는지 모르니.
+ * 답하지 않는 사람도 같은 표현을 하루에 몇 번씩 보지 않고, 날을 나눠 다시 만나게 한다.
+ * 그사이 다른 세션에서 답해서 복습할 때가 아니면 그대로 둔다.
+ */
+export function passOver(notes: Notes, id: string, now: number): Notes {
+  const note = notes[id]
+
+  return note === undefined || note.dueAt > now ? notes : { ...notes, [id]: { ...note, dueAt: now + DAY_MS } }
 }
 
 /** 퀴즈 답을 반영한다. 알았으면 다음 칸으로, 몰랐으면 첫 칸으로. 다음 복습까지 며칠인지도. */
