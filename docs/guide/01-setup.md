@@ -36,7 +36,7 @@ claude plugin install hellolingo --marketplace dnjswhdzld/hellolingo
 
 ## 보내는 것
 
-- 내 프롬프트만 haiku에 보냅니다. 프롬프트 안의 코드 블록은 빼고 보냅니다.
+- 내 프롬프트만 haiku에 보냅니다. 프롬프트 안에서 백틱 세 개(`` ``` ``)로 감싼 코드 블록은 빼고 보냅니다.
 - Claude의 답, 내 코드, 파일은 읽지도 바꾸지도 않습니다.
 - 노트는 내 컴퓨터에만 저장합니다.
 
