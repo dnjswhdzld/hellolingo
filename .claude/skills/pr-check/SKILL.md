@@ -29,7 +29,8 @@ npx --yes -p typescript@5.6.3 tsc -p tsconfig.json
 | 바뀐 곳 | 할 일 |
 | --- | --- |
 | `hooks/prompts.ts`, `hooks/cards.ts` | `tools/eval/README.md`의 "바꾸기 전과 비교하기"대로 기준 브랜치와 지금을 `--runs 9`로 셉니다. 기대 세 가지(`keep`, `fix`, `ko`)의 통과 수를 전과 후로 PR에 적습니다. 테스트는 모델 답을 흉내만 내서, 지시문이 실제로 듣는지는 이것으로만 압니다. 하한 아래면 PR을 열지 않습니다. 로그인이 필요하고, 한 버전에 haiku를 198번 불러 $0.1쯤 듭니다. 가이드 화면의 카드는 녹화한 답(`tools/screenshots/cards.json`)이라 지시문을 따라 바뀌지 않습니다. 카드 모양이 달라질 변경이면 그 프롬프트의 녹화를 `cards.json`에서 지우고, `--record`로 다시 녹화한 뒤 그 장면을 다시 찍습니다. 기준 버전을 꺼낼 때 `git stash`는 쓰지 않습니다. 다른 작업과 함께 쓰는 저장 공간이라 남의 변경을 꺼낼 수 있습니다. |
-| 카드, 퀴즈, 노트 화면을 그리는 곳 (`hooks/register.tsx`의 `cardRows`, `quizRows`, `notesPaneRows`, `drawRows`) | `tools/screenshots/README.md`대로 영향받는 장면을 다시 찍고, 새 화면을 직접 열어 봅니다. 가이드 화면이 실제와 달라지면 학습자가 따라 하지 못합니다. |
+| `hooks/prompts.ts`의 `LESSON_TASK`, `hooks/lessons.ts` | `tools/eval/README.md`의 "학습하기 문제 평가"대로 기준 브랜치와 지금을 `--runs 6 --judge`로 셉니다. 문제가 나온 수와 바른 문제 수를 전과 후로 PR에 적습니다. 판정에 sonnet을 불러서 비용이 카드 평가보다 많이 듭니다. 가이드 화면의 학습하기 문제도 녹화한 답이라, 문제 모양이 달라질 변경이면 `cards.json`의 `LESSON:` 녹화를 지우고 다시 녹화합니다. |
+| 카드, 공부 칸, 노트 화면을 그리는 곳 (`hooks/register.tsx`의 `cardRows`, `studyRows`, `lessonRows`, `arrangeRows`, `quizRows`, `listRows`, `notesPaneRows`, `drawRows`) | `tools/screenshots/README.md`대로 영향받는 장면을 다시 찍고, 새 화면을 직접 열어 봅니다. 가이드 화면이 실제와 달라지면 학습자가 따라 하지 못합니다. |
 | 기능을 더하거나 빼는 변경 | 아래 3단계를 꼼꼼히 합니다. |
 
 ## 3. 사람 눈으로 보는 것

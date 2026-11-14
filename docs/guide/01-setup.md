@@ -32,7 +32,7 @@ claude plugin install hellolingo --marketplace dnjswhdzld/hellolingo
 
 ## 쓰는 양
 
-카드 하나에 haiku 모델을 한 번 부릅니다. Claude Code 사용량에 들어갑니다. 퀴즈와 노트는 모델을 부르지 않습니다.
+카드 하나에 haiku 모델을 한 번 부릅니다. 학습하기를 누를 때도 한 번 부릅니다. Claude Code 사용량에 들어갑니다. 복습과 노트는 모델을 부르지 않습니다.
 
 ## 보내는 것
 
