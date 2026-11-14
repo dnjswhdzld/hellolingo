@@ -1,8 +1,12 @@
 """Draw a tmux ANSI capture as a terminal window PNG (title bar, colors, Hangul two cells wide) with headless Chrome."""
-import html, pathlib, re, subprocess, unicodedata
+import html, os, pathlib, re, shutil, subprocess, unicodedata
 
-CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-CW, LH = 14 * 0.60205, 17.0  # Menlo 14px 한 칸의 폭과 줄 높이
+# macOS의 Chrome. 다른 곳에서는 CHROME 환경 변수나 PATH의 chrome, chromium을 쓴다.
+CHROME = os.environ.get('CHROME') or next(
+    (p for p in ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                 *(shutil.which(n) or '' for n in ('google-chrome', 'chromium', 'chromium-browser'))] if p and os.path.exists(p)),
+    'chrome')
+CW, LH = 14 * 0.60205, 17.0  # Menlo 14px 한 칸의 폭과 줄 높이. DejaVu Sans Mono도 폭이 같다
 BG, FG = '#1e1e1e', '#d4d4d4'
 BASE = ['#000000', '#cd3131', '#0dbc79', '#e5e510', '#2472c8', '#bc3fbc', '#11a8cd', '#e5e5e5',
         '#666666', '#f14c4c', '#23d18b', '#f5f543', '#3b8eea', '#d670d6', '#29b8db', '#ffffff']
@@ -111,11 +115,11 @@ body{{padding:{margin}px;}}
 .win{{width:{w}px;border-radius:10px;overflow:hidden;background:{BG};
   box-shadow:0 18px 40px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.08);}}
 .bar{{height:{bar}px;background:#2b2b2b;display:flex;align-items:center;position:relative;
-  font:13px -apple-system,"Apple SD Gothic Neo",sans-serif;color:#9a9a9a;}}
+  font:13px -apple-system,"Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;color:#9a9a9a;}}
 .dots{{position:absolute;left:14px;display:flex;gap:8px;}}
 .dots i{{width:12px;height:12px;border-radius:50%;display:block;}}
 .t{{width:100%;text-align:center;}}
-.term{{padding:{pad}px;font:14px/{LH}px Menlo,"Apple SD Gothic Neo",monospace;}}
+.term{{padding:{pad}px;font:14px/{LH}px Menlo,"DejaVu Sans Mono","Apple SD Gothic Neo","Noto Sans Mono CJK KR",monospace;}}
 .l{{height:{LH}px;white-space:pre;}}
 </style><div class="win"><div class="bar"><span class="dots"><i style="background:#ff5f57"></i>
 <i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="t">{html.escape(title)}</span></div>
@@ -123,7 +127,12 @@ body{{padding:{margin}px;}}
     png = pathlib.Path(png_path).resolve()
     page_path = pathlib.Path(ansi_path).resolve().with_suffix('.html')
     page_path.write_text(page)
-    subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--hide-scrollbars', '--run-all-compositor-stages-before-draw',
+    # root로 돌 때(컨테이너 등)는 Chrome이 샌드박스 없이만 뜨고, 작은 /dev/shm 때문에 멈추지 않게 그것을 쓰지 않는다.
+    sandbox = ['--no-sandbox', '--disable-dev-shm-usage'] if hasattr(os, 'geteuid') and os.geteuid() == 0 else []
+    subprocess.run([CHROME, *sandbox, '--headless=new', '--disable-gpu', '--hide-scrollbars', '--run-all-compositor-stages-before-draw',
+                    # 로컬 파일만 그린다. 업데이트 확인 같은 접속을 하지 않아야, 접속이 막힌 곳에서도 멈추지 않는다.
+                    '--no-first-run', '--no-default-browser-check', '--disable-background-networking',
+                    '--disable-component-update', '--no-proxy-server',
                     '--virtual-time-budget=1500',
                     f'--user-data-dir={page_path.parent / ".chrome-profile"}', '--force-device-scale-factor=1.75',
                     '--default-background-color=00000000', f'--window-size={w + 2 * margin},{h + 2 * margin}',
