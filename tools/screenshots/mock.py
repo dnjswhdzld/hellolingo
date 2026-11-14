@@ -2,7 +2,8 @@
 
     python3 -I mock.py <scene.json> <cards.json> <log> <port> [--record]
 
-The mod's card call gets the real haiku answer recorded in cards.json for that exact prompt.
+The mod's card call gets the real haiku answer recorded in cards.json for that exact prompt, and its lesson call
+(학습하기) the one recorded for that card's Korean.
 With --record, a prompt with no recording is sent to real haiku through `claude -p`, built the way
 the mod builds it (same system prompt, low effort, no tools), and the answer is saved.
 Claude's main loop gets the scene's scripted turn, one step per assistant message. Tools run for real.
@@ -42,10 +43,18 @@ def ask_haiku(system, prompt):
     return json.loads(result[result.find('{'):result.rfind('}') + 1])
 
 
+def card_key(prompt):
+    """녹화한 답을 찾는 열쇠. 카드는 프롬프트 그대로, 학습하기는 'LESSON:'과 카드에서 본 한국어."""
+    lesson = re.search(r'KOREAN:\n<<<\n(.*?)\n>>>', prompt, re.S)
+    if 'MODE: LESSON' in prompt and lesson:
+        return 'LESSON:' + lesson.group(1)
+    m = re.search(r'PROMPT:\n<<<\n(.*)\n>>>', prompt, re.S)
+    return m.group(1) if m else ''
+
+
 def card_reply(body, system):
     prompt = text_of(body['messages'][-1]['content'])
-    m = re.search(r'PROMPT:\n<<<\n(.*)\n>>>', prompt, re.S)
-    key = m.group(1) if m else ''
+    key = card_key(prompt)
     with lock:
         cards = json.load(open(CARDS_PATH))
     card = cards.get(key)

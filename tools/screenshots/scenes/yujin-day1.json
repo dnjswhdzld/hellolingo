@@ -221,7 +221,93 @@
    "wait": "바뀌게 연결했습니다"
   },
   {
-   "sleep": 1.0
+   "sleep": 4.0
+  },
+  {
+   "keys": [
+    "C-x"
+   ]
+  },
+  {
+   "sleep": 0.3
+  },
+  {
+   "keys": [
+    "Tab"
+   ]
+  },
+  {
+   "sleep": 0.5
+  },
+  {
+   "keys": [
+    "s"
+   ]
+  },
+  {
+   "wait": "학습하기 · 1/",
+   "timeout": 60
+  },
+  {
+   "sleep": 0.8
+  },
+  {
+   "shot": "study-1-first"
+  },
+  {
+   "arrange": "right"
+  },
+  {
+   "wait": "맞았어요",
+   "play_only": true
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "study-2-right"
+  },
+  {
+   "keys": [
+    "n"
+   ],
+   "play_only": true
+  },
+  {
+   "wait": "학습하기 · 2/",
+   "play_only": true
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "arrange": "wrong"
+  },
+  {
+   "wait": "개를 맞혔어요",
+   "play_only": true
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "study-3-done"
+  },
+  {
+   "keys": [
+    "q"
+   ]
+  },
+  {
+   "gone": "학습하기 · "
+  },
+  {
+   "keys": [
+    "Escape"
+   ]
+  },
+  {
+   "sleep": 0.6
   },
   {
    "say": "수량이 0이 되면 장바구니에서 빼줘"

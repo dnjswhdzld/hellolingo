@@ -323,5 +323,99 @@
         "example": "Check the price for each one you picked."
       }
     ]
+  },
+  "LESSON:장바구니에서 수량 바꾸는 버튼 만들어줘": {
+    "point": {
+      "type": "order",
+      "ko": "~하는 버튼",
+      "en": "a button to ~"
+    },
+    "drills": [
+      {
+        "ko": "주문 취소하는 버튼 추가해줘",
+        "parts": [
+          {
+            "ko": "버튼 추가해줘",
+            "en": "Add a button"
+          },
+          {
+            "ko": "취소하는",
+            "en": "to cancel"
+          },
+          {
+            "ko": "주문",
+            "en": "the order."
+          }
+        ]
+      },
+      {
+        "ko": "파일 업로드하는 버튼 만들어줘",
+        "parts": [
+          {
+            "ko": "버튼 만들어줘",
+            "en": "Make a button"
+          },
+          {
+            "ko": "업로드하는",
+            "en": "to upload"
+          },
+          {
+            "ko": "파일",
+            "en": "the file."
+          }
+        ]
+      },
+      {
+        "ko": "메일 보내는 버튼 넣어줘",
+        "parts": [
+          {
+            "ko": "버튼 넣어줘",
+            "en": "Put a button"
+          },
+          {
+            "ko": "보내는",
+            "en": "to send"
+          },
+          {
+            "ko": "메일",
+            "en": "the email."
+          }
+        ]
+      },
+      {
+        "ko": "로그인 확인하는 버튼 만들어줘",
+        "parts": [
+          {
+            "ko": "버튼 만들어줘",
+            "en": "Make a button"
+          },
+          {
+            "ko": "확인하는",
+            "en": "to check"
+          },
+          {
+            "ko": "로그인",
+            "en": "the login."
+          }
+        ]
+      },
+      {
+        "ko": "설정 저장하는 버튼 추가해줘",
+        "parts": [
+          {
+            "ko": "버튼 추가해줘",
+            "en": "Add a button"
+          },
+          {
+            "ko": "저장하는",
+            "en": "to save"
+          },
+          {
+            "ko": "설정",
+            "en": "the settings."
+          }
+        ]
+      }
+    ]
   }
 }
