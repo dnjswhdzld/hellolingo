@@ -3,7 +3,8 @@
 //  - 한국어 프롬프트: 영어 문장과 내 한국어 문장 (같은 뜻의 조각에 같은 색) + 핵심 표현 1개
 //  - 영어 프롬프트: 틀린 부분 → 고친 부분 (없으면 더 자연스러운 표현 1개)
 // 새 프롬프트를 보내도 카드는 지우지 않는다: 새 카드가 준비될 때까지 이전 카드를 그대로 둔다.
-// 카드의 핵심 표현은 표현 노트에 모은다. 공부는 학습자가 카드 위쪽의 버튼을 눌렀을 때만 오른쪽 공부 칸에서 한다:
+// 카드의 핵심 표현은 표현 노트에 모은다. 공부는 학습자가 카드 위쪽의 버튼을 눌렀을 때만 한다.
+// 그동안은 카드 자리에 공부 칸만 보이고, 닫으면 카드가 돌아온다:
 //  - 학습하기: 이 문장에서 한국어 사용자가 막히는 한 곳을 같은 틀의 새 문장 2개로 조각 맞추기
 //  - 복습: 복습할 때가 된 표현을 차례로 떠올리기
 //  - 학습 노트: 모은 표현을 영어를 가린 채 보고, 골라서 떠올리기
@@ -54,8 +55,6 @@ const MAX_TOKENS = 800 // 짝짓기까지 담은 JSON이 잘리지 않게
 const LESSON_MAX_TOKENS = 1500 // 배울 점과 문제 5개
 const LESSON_ATTEMPTS = 2 // 쓸 만한 문제가 없는 답이 오면 한 번 더 부른다
 const TIMEOUT_MS = 20_000
-const MIN_SPLIT_COLUMNS = 70 // 영역이 이보다 좁으면 반으로 나누지 않고 위아래로 쌓는다
-const GAP = 2
 const LIST_ROWS = 8 // 공부 칸의 노트 목록에 보이는 표현 수. 숫자 키 1~8로 고른다
 // 카드 테두리. 이모지는 터미널마다 폭을 다르게 세서 테두리를 어긋나게 하니, 카드 안에는 쓰지 않는다.
 const CARD_BORDER = 'round'
@@ -143,25 +142,31 @@ export const register: Register = on => {
     const open = await read($, study)
     const notes = await read($, notesView)
     const now = await $.clock.now()
-    // 공부 칸이 닫혀 있을 때만 카드 위쪽에 버튼을 둔다. 열려 있으면 공부 칸의 버튼만 보인다.
-    const tools =
-      open === null
-        ? headerButtons(card, notes, now, {
-            lesson: () => void openLesson($),
-            review: () => void openReview($),
-            list: () => void openList($),
-          })
-        : []
-    const promptPanel =
-      card !== null
-        ? { key: 'prompt', rows: [...(pendingSeq === null ? [] : [NEWER_PENDING_ROW]), ...cardRows(card, tools)] }
-        : pendingSeq !== null
-          ? { key: 'prompt', rows: pendingRows() }
-          : null
-    const studyPanel = open === null ? null : { key: 'study', rows: studyRows(open, notes, now, actions($, open.id)) }
-    const cards = [promptPanel, studyPanel].filter(notNull)
+    // 한 번에 한 칸만 보인다. 공부 칸이 열려 있으면 카드는 숨긴다: 볼 것이 하나라야 쉽고,
+    // 카드의 영어 문장이 옆에 보이면 혼자 맞추는 문제의 답을 미리 알려 준다. 닫으면 카드가 돌아온다.
+    const panel =
+      open !== null
+        ? { key: 'study', rows: studyRows(open, notes, now, actions($, open.id)) }
+        : card !== null
+          ? {
+              key: 'prompt',
+              rows: [
+                ...(pendingSeq === null ? [] : [NEWER_PENDING_ROW]),
+                ...cardRows(
+                  card,
+                  headerButtons(card, notes, now, {
+                    lesson: () => void openLesson($),
+                    review: () => void openReview($),
+                    list: () => void openList($),
+                  }),
+                ),
+              ],
+            }
+          : pendingSeq !== null
+            ? { key: 'prompt', rows: pendingRows() }
+            : null
 
-    if (cards.length === 0) {
+    if (panel === null) {
       return next(e)
     }
 
@@ -169,28 +174,12 @@ export const register: Register = on => {
     const { Box } = el
     // 같은 자리를 쓰는 다른 mod나 Claude Code 자체의 내용도 함께 보이게 아래에 붙인다.
     const below = await next(e)
-    // 카드 둘은 자리가 되면 좌우 반씩, 좁으면 위아래로.
-    const isSplit = cards.length === 2 && e.props.bodyColumns >= MIN_SPLIT_COLUMNS
-    const cardWidth = isSplit ? Math.floor((e.props.bodyColumns - GAP) / 2) : undefined
 
-    // 칸마다 둥근 테두리를 둘러서, 터미널의 다른 내용과 그리고 서로 구분되게 한다.
-    // 너비는 테두리와 안쪽 여백까지 포함한 값이다.
+    // 둥근 테두리를 둘러서 터미널의 다른 내용과 구분되게 한다.
     return (
       <Box flexDirection="column">
-        <Box flexDirection={isSplit ? 'row' : 'column'} columnGap={GAP} marginBottom={1}>
-          {cards.map(panel => (
-            <Box
-              key={panel.key}
-              flexDirection="column"
-              width={cardWidth}
-              flexShrink={0}
-              borderStyle={CARD_BORDER}
-              borderDimColor
-              paddingX={1}
-            >
-              {drawRows(el, panel.rows)}
-            </Box>
-          ))}
+        <Box key={panel.key} flexDirection="column" borderStyle={CARD_BORDER} borderDimColor paddingX={1} marginBottom={1}>
+          {drawRows(el, panel.rows)}
         </Box>
         {below}
       </Box>
@@ -848,7 +837,7 @@ function pairColor(pair: number): string {
   return PAIR_COLORS[pair % PAIR_COLORS.length] ?? ACCENT
 }
 
-/** 오른쪽 공부 칸. 학습하기, 복습, 노트 목록 */
+/** 공부 칸. 학습하기, 복습, 노트 목록. 열려 있는 동안 카드 자리를 대신한다 */
 function studyRows(s: Study, notes: Notes, now: number, on: StudyActions): Row[] {
   const close: RowButton = { key: 'study-close', label: '닫기', hotkey: 'q', onPress: on.close }
 

@@ -657,7 +657,7 @@ describe('expression notebook and study panel', () => {
     await ui.unmount()
   })
 
-  test('the study panel sits beside the card, stacks when narrow, and stays across prompts and finished turns', async ($, on) => {
+  test('the study panel takes the place of the card until closed, and stays across prompts and finished turns', async ($, on) => {
     const clock = mock.clock(on)
     // 다른 세션에서 모아 둔 표현도 복습에 나온다. 모양이 틀린 줄은 버린다.
     engine(on, () => KO_REPLY, { notes: { 'make sure': note('make sure', '꼭 ~하다'), broken: { en: 1 } } })
@@ -665,37 +665,37 @@ describe('expression notebook and study panel', () => {
     await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
     await $.prompt.submit(typed(KO_PROMPT))
     await clock.settle()
-    const working = await $.ui.mount(WIDE)
+    const ui = await $.ui.mount(WIDE)
 
-    await working.press({ key: 'study-review' })
+    await ui.press({ key: 'study-review' })
     await clock.settle()
-    // (100 - 카드 사이 2칸) / 2
-    expect((await working.find({ type: 'Box', key: 'prompt' }))?.props.width).toBe(49)
-    expect((await working.find({ type: 'Box', key: 'study' }))?.props).toMatchObject({
-      width: 49,
+    // 한 번에 한 칸만: 공부하는 동안 카드와 그 영어 문장은 보이지 않는다.
+    expect(await ui.find({ type: 'Box', key: 'prompt' })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: KO_ENGLISH_LINE })).toBeUndefined()
+    expect((await ui.find({ type: 'Box', key: 'study' }))?.props).toMatchObject({
       borderStyle: 'round',
       borderDimColor: true,
       paddingX: 1,
     })
-    expect(await working.find({ type: 'Text', text: /"꼭 ~하다"/ })).toBeDefined()
-    // 공부 칸이 열려 있으면 카드 위쪽 버튼은 숨는다.
-    expect(await working.find({ type: 'Button', key: 'study-lesson' })).toBeUndefined()
-    await working.unmount()
+    expect((await ui.find({ type: 'Box', key: 'study' }))?.props.width).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: /"꼭 ~하다"/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^engine$/ })).toBeDefined()
 
-    const narrow = await $.ui.mount({ ...WIDE, props: { ...WIDE.props, bodyColumns: 60 } })
-
-    expect((await narrow.find({ type: 'Box', key: 'prompt' }))?.props.width).toBeUndefined()
-    expect((await narrow.find({ type: 'Box', key: 'study' }))?.props.width).toBeUndefined()
-    await narrow.unmount()
-
+    // 새 프롬프트를 보내도, 턴이 끝나도 공부 칸은 그대로다.
     await $.turn.complete(answered(ANSWER))
-    await $.prompt.submit(typed('응 해줘'))
+    await $.prompt.submit(typed('회원가입 버튼 색 바꿔줘'))
     await $.prompt.submit({ ...typed('/lingo-notes'), command: { name: 'lingo-notes', args: '' } })
     await clock.settle()
-    const later = await $.ui.mount(WIDE)
+    expect(await ui.find({ type: 'Box', key: 'study' })).toBeDefined()
+    expect(await ui.find({ type: 'Box', key: 'prompt' })).toBeUndefined()
 
-    expect(await later.find({ type: 'Box', key: 'study' })).toBeDefined()
-    await later.unmount()
+    // 닫으면 카드가 단추와 함께 돌아온다.
+    await ui.press({ key: 'study-close' })
+    await clock.settle()
+    expect(await ui.find({ type: 'Box', key: 'study' })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: KO_ENGLISH_LINE })).toBeDefined()
+    expect(await ui.find({ type: 'Button', key: 'study-lesson' })).toBeDefined()
+    await ui.unmount()
   })
 
   test('학습하기 practices one pattern in two new sentences: the first helped by colors, the second alone', async ($, on) => {

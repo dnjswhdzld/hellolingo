@@ -278,18 +278,6 @@
   },
   {
    "sleep": 1.0
-  },
-  {
-   "resize": [
-    64,
-    42
-   ]
-  },
-  {
-   "sleep": 1.5
-  },
-  {
-   "shot": "narrow-window"
   }
  ]
 }
