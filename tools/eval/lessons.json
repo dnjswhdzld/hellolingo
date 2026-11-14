@@ -1,0 +1,14 @@
+[
+  { "id": "tests", "prompt": "테스트 돌려보고 실패하는 거 있으면 알려줘" },
+  { "id": "label", "prompt": "어제 만든 수량 버튼에 접근성 라벨 붙여줘" },
+  { "id": "ads", "prompt": "이번 주 광고 문구 세 개만 더 짧게 다듬어줘" },
+  { "id": "minutes", "prompt": "회의록이 너무 길어서 아무도 안 읽는 것 같아. 핵심만 다섯 줄로 요약해줘. 내일 아침까지만 되면 돼." },
+  { "id": "log", "prompt": "로그인하고 나면 가끔 빈 화면이 떠.\n[error] TypeError: Cannot read properties of undefined (reading 'name')\n이 에러 왜 나는지 찾아줘" },
+  { "id": "signup", "prompt": "회원가입 폼에서 비밀번호 다시 입력하는 칸 만들어줘" },
+  { "id": "env", "prompt": "배포하기 전에 환경 변수 빠진 거 없는지 확인해줘" },
+  { "id": "slow", "prompt": "이 함수가 왜 이렇게 느린지 원인 찾아줘" },
+  { "id": "reply", "prompt": "고객 문의 메일에 보낼 답장 초안 써줘" },
+  { "id": "refund", "prompt": "매출 데이터에서 반품된 주문만 빼고 다시 계산해줘" },
+  { "id": "pr", "prompt": "이 PR에서 바뀐 부분만 짧게 요약해줘" },
+  { "id": "empty", "prompt": "검색 결과가 없을 때 보여줄 안내 문구 추가해줘" }
+]
