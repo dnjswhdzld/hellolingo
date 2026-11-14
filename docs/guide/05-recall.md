@@ -34,7 +34,7 @@
 
 어제 [학습하기](03-study.md)에서 연습한 배울 점도 복습에 나옵니다. 이번에는 처음 보는 문장으로, 색 없이 조각을 맞춥니다.
 
-![복습 칸에 "설정 저장하는 버튼 추가해줘"와 조각 단추 "add a button", "the settings", "to save"가 있습니다.](images/recall-4-pattern.png)
+![복습 칸에 "설정 저장하는 버튼 추가해줘"와 조각 단추 "add a button", "the settings", "to save"와 "닫기"가 있습니다.](images/recall-4-pattern.png)
 
 다 맞추면 배울 점이 다시 보이고, 다음에 언제 볼지 나옵니다. 조각을 맞췄으면 떠올린 것입니다. 따로 `떠올렸어요`를 누르지 않습니다.
 
