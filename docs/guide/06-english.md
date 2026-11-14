@@ -1,4 +1,4 @@
-# 5. 영어로 써 보기
+# 6. 영어로 써 보기
 
 ![책상 위에 run, the tests, again이라고 적힌 나무 낱말 조각이 한 줄로 놓여 있습니다. 주황 말풍선이 the tests 조각을 끼우고, 초록 말풍선은 빨간 X 표시가 붙은 test 조각을 빼 들고 있습니다.](images/english.jpg)
 
@@ -40,4 +40,4 @@ Can you write the PR description?
 
 Claude는 영어로 쓴 부탁에도 평소처럼 일합니다. 카드는 Claude의 답을 바꾸지 않습니다.
 
-다음: [6. 노트와 밀린 복습](06-notes.md)
+다음: [7. 노트와 밀린 복습](07-notes.md)
