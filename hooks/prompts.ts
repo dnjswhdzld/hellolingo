@@ -77,6 +77,48 @@ export const EN_TASK = [
   '{"fixes": [], "natural": {"en": "natural expression", "ko": "한국어 뜻", "example": "short example sentence"}}',
 ].join('\n')
 
+// 학습하기: 카드의 문장에서 한국어 사용자가 막히는 한 곳(배울 점)을 고르고, 같은 틀의 새 문장으로
+// 조각 맞추기 문제를 만든다. 낱말 고르기(create와 add)는 맞는 답이 여럿이라 채점할 수 없어서 고르지 않는다.
+// 영어를 먼저 쓰고 한국어를 맞추게 해야 한국어의 뜻이 영어에서 빠지지 않는다. 문장 앞으로 옮길 수 있는 구를 빼야
+// 맞는 순서가 하나뿐이다. 이 둘이 없으면 tools/eval/lessons.mjs의 판정이 절반 가까이 떨어졌다.
+export const LESSON_TASK = [
+  'MODE: LESSON',
+  'The learner wrote the Korean below and saw its English. They pressed "study" to practice it.',
+  'Step 1. Pick the one pattern in this pair that a Korean speaker most needs for writing requests in English:',
+  '"order": words that describe a thing come after it in English, like "수량 바꾸는 버튼" -> "a button to change',
+  'the quantity", "어제 만든 폼" -> "the form I made yesterday", "고객에게 보낼 답장" -> "a reply to the customer".',
+  'Not phrases like "in three lines", "without ~", "when ~", "for this week": English can put those first or last.',
+  'Not a single describing word either: it stays before the thing ("canceled orders", "the empty rows").',
+  '"chunk": the words that ask for the action, which they can reuse with other words, like "Tell me if ~",',
+  '"Find out why ~", "Make sure ~", "Can you check if ~".',
+  'Every request has a chunk: when there is no order pattern, use the chunk. Never a single word choice',
+  '(like create or add): those have more than one right answer.',
+  '"point": {"type": "order" or "chunk", "ko": "the Korean pattern", "en": "the English pattern"}',
+  'Write the patterns with the real words of this sentence and ~ where other words go, like "~하는 버튼" and',
+  '"a button to ~", never with labels like [noun].',
+  'Step 2. Write 5 NEW English requests that use the pattern, like ones this person might send next in the same kind',
+  'of work, with different words from the original and from each other. Each is 4 to 9 words: the pattern, a verb and',
+  'its object. Add no phrase that could move to the start, like a place, a time, a reason, "in ~", "for ~",',
+  '"without ~" or "when ~": then more than one order would be right.',
+  'Split each into exactly 3 pieces, listed in English order so the first piece starts the sentence.',
+  'Each piece is a whole chunk: a request chunk, a verb with its object, or the words that describe a thing.',
+  'Never split a name in two (not [the error] [log]). For a chunk, keep all its words in one piece, like [Tell me if].',
+  'Then write the Korean request this person would type for it, saying exactly the same thing, and pair each piece',
+  'with the Korean piece it comes from, copied exactly from that Korean.',
+  'Example of the whole reply, with 2 of the 5 drills:',
+  '{"point": {"type": "order", "ko": "~하는 칸", "en": "a field to ~"}, "drills": [',
+  ' {"ko": "쿠폰 입력하는 칸 추가해줘", "parts": [{"ko": "칸 추가해줘", "en": "Add a field"},',
+  '  {"ko": "입력하는", "en": "to enter"}, {"ko": "쿠폰", "en": "a coupon."}]},',
+  ' {"ko": "보고서 내려받는 버튼 만들어줘", "parts": [{"ko": "버튼 만들어줘", "en": "Make a button"},',
+  '  {"ko": "내려받는", "en": "to download"}, {"ko": "보고서", "en": "the report."}]}]}',
+  'Your reply has all 5 drills, each with its own Korean and 3 pieces.',
+].join('\n')
+
+/** 학습하기를 눌렀을 때 haiku에 보내는 요청. 카드에서 본 한국어와 영어를 준다. tools/eval도 이 함수를 쓴다. */
+export function lessonPrompt(korean: string, english: string): string {
+  return `${LESSON_TASK}\n\nKOREAN:\n<<<\n${korean}\n>>>\nENGLISH:\n<<<\n${english}\n>>>`
+}
+
 /** 카드 하나를 만들 때 haiku에 보내는 요청. tools/eval도 이 함수로 같은 요청을 만든다. */
 export function cardPrompt(korean: boolean, text: string): string {
   return `${korean ? KO_TASK : EN_TASK}\n\nPROMPT:\n<<<\n${text}\n>>>`

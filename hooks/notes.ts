@@ -1,7 +1,7 @@
-// 표현 노트: 카드에 나온 표현을 모아 두고, 간격 반복으로 언제 다시 볼지 정한다.
+// 표현 노트: 카드에 나온 표현과 학습하기에서 연습한 배울 점을 모아 두고, 간격 반복으로 언제 다시 볼지 정한다.
 // 값만 다루는 함수들이다. 저장소에서 읽고 쓰는 일은 register.tsx가 한다.
 
-import type { Note, Notes, Phrase } from '../types'
+import type { Drill, Lesson, Note, Notes, Part, Phrase, Point } from '../types'
 
 export const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -15,6 +15,9 @@ export const NEW_PER_DAY = 5
 
 /** 복습할 때가 된 표현이 이만큼 쌓이면, 복습을 먼저 하도록 새 표현을 모으지 않는다. */
 export const MAX_DUE = 10
+
+/** 배울 점 하나에 남겨 두는 복습 문제 수 */
+const MAX_DRILLS_KEPT = 6
 
 /** 지금 새 표현을 모으는지: 모은다, 오늘 몫을 다 모았다, 밀린 복습이 많다 */
 export type Intake = 'open' | 'full-today' | 'backlog'
@@ -48,7 +51,7 @@ export function asNotes(v: unknown): Notes {
 
   for (const [id, note] of Object.entries(v)) {
     if (isNote(note)) {
-      notes[id] = note
+      notes[id] = withLesson(note)
     }
   }
 
@@ -71,6 +74,101 @@ export function addPhrases(notes: Notes, phrases: readonly Phrase[], now: number
   }
 
   return keepNewest(added)
+}
+
+/**
+ * 학습하기에서 연습한 배울 점을 노트에 담는다. 학습자가 직접 고른 것이라 하루 몫과 밀린 복습에 상관없이 담는다.
+ * 첫 복습은 하루 뒤: 그 자리에서 맞혀도 간격을 건너뛰지 않는다. drills는 복습 때 낼 순서로 둔다.
+ * 이미 있는 배울 점이면 새 문제를 더하고, 복습 날이 더 늦으면 하루 뒤로 당긴다.
+ */
+export function addPoint(notes: Notes, lesson: Lesson, drills: readonly Drill[], now: number): Notes {
+  const id = noteId(lesson.point.en)
+  const old = notes[id]
+
+  if (id === '' || drills.length === 0) {
+    return notes
+  }
+
+  if (old === undefined) {
+    const note: Note = {
+      en: lesson.point.en,
+      ko: lesson.point.ko,
+      example: '',
+      addedAt: now,
+      seenAt: now,
+      level: 0,
+      dueAt: now + DAY_MS,
+      shownAt: null,
+      point: lesson.point,
+      drills,
+    }
+
+    return keepNewest({ ...notes, [id]: note })
+  }
+
+  const known = new Set((old.drills ?? []).map(d => d.ko))
+  const merged = [...drills.filter(d => !known.has(d.ko)), ...(old.drills ?? [])].slice(0, MAX_DRILLS_KEPT)
+
+  return {
+    ...notes,
+    [id]: { ...old, point: old.point ?? lesson.point, drills: merged, dueAt: Math.min(old.dueAt, now + DAY_MS) },
+  }
+}
+
+/** 배울 점을 복습할 때 낼 문제. 핵심 표현이면 null. */
+export function nextDrill(note: Note): Drill | null {
+  return note.point === undefined ? null : (note.drills?.[0] ?? null)
+}
+
+/** 낸 문제를 맨 뒤로 보내서, 다음 복습에는 다른 문장이 나오게 한다. */
+export function rotateDrills(notes: Notes, id: string): Notes {
+  const note = notes[id]
+  const [first, ...rest] = note?.drills ?? []
+
+  return note === undefined || first === undefined ? notes : { ...notes, [id]: { ...note, drills: [...rest, first] } }
+}
+
+/** 지금 복습할 때가 된 표현 수 */
+export function dueCount(notes: Notes, now: number): number {
+  return Object.values(notes).filter(n => n.dueAt <= now).length
+}
+
+/**
+ * 노트 목록에 보일 순서. 복습할 때가 된 것을 먼저, 그다음은 아직 몇 번 못 맞힌 것부터.
+ * 학습자가 위에서부터 고르면 자연히 지금 필요한 표현을 고르게 된다.
+ */
+export function studyOrder(notes: Notes, now: number): [string, Note][] {
+  const isDue = (n: Note) => (n.dueAt <= now ? 0 : 1)
+
+  return Object.entries(notes).sort(
+    ([, a], [, b]) => isDue(a) - isDue(b) || (isDue(a) === 0 ? a.dueAt - b.dueAt : a.level - b.level || a.dueAt - b.dueAt),
+  )
+}
+
+/**
+ * 노트에서 골라 떠올린 결과. 복습할 때가 된 표현이면 복습과 같다.
+ * 아직 때가 아닌 표현은 떠올렸으면 일정을 그대로 두고, 못 떠올렸으면 내일로 당긴다.
+ * 그래서 아는 표현만 골라도 간격이 부풀지 않고, 모르는 표현을 고르면 일찍 다시 만난다.
+ * days: 다음 복습까지 며칠. 일정을 바꾸지 않았으면 null.
+ */
+export function practiceNote(notes: Notes, id: string, knew: boolean, now: number): { notes: Notes; days: number | null } {
+  const note = notes[id]
+
+  if (note === undefined) {
+    return { notes, days: null }
+  }
+
+  if (note.dueAt <= now) {
+    return answerNote(notes, id, knew, now)
+  }
+
+  if (knew) {
+    return { notes, days: null }
+  }
+
+  const dueAt = Math.min(note.dueAt, now + DAY_MS)
+
+  return { notes: { ...notes, [id]: { ...note, seenAt: now, dueAt } }, days: Math.ceil((dueAt - now) / DAY_MS) }
 }
 
 /**
@@ -138,6 +236,32 @@ function keepNewest(notes: Notes): Notes {
   }
 
   return Object.fromEntries(all.sort(([, a], [, b]) => b.addedAt - a.addedAt).slice(0, MAX_NOTES))
+}
+
+/** 배울 점과 문제의 모양이 틀렸으면 그 둘만 빼고 핵심 표현처럼 둔다. */
+function withLesson(note: Note): Note {
+  const { point, drills, ...phrase } = note
+  const goodDrills = Array.isArray(drills) ? drills.filter(isDrill) : []
+
+  return isPoint(point) && goodDrills.length > 0 ? { ...phrase, point, drills: goodDrills } : phrase
+}
+
+function isPoint(v: unknown): v is Point {
+  return (
+    isRecord(v) &&
+    (v.type === 'order' || v.type === 'chunk') &&
+    typeof v.ko === 'string' &&
+    typeof v.en === 'string' &&
+    typeof v.hint === 'string'
+  )
+}
+
+function isDrill(v: unknown): v is Drill {
+  return isRecord(v) && typeof v.ko === 'string' && Array.isArray(v.parts) && v.parts.length > 0 && v.parts.every(isPart)
+}
+
+function isPart(v: unknown): v is Part {
+  return isRecord(v) && typeof v.ko === 'string' && typeof v.en === 'string'
 }
 
 function isNote(v: unknown): v is Note {
