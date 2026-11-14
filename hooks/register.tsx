@@ -76,6 +76,9 @@ let persisting: Promise<unknown> = Promise.resolve()
 const lessons = new Map<number, Lesson | null>()
 const MAX_CACHED_LESSONS = 5
 
+// 카드마다 지금 만드는 중인 학습하기. 화면이 바뀌기 전에 두 번 눌러도 모델은 한 번만 부른다.
+const making = new Map<number, Promise<Lesson | null>>()
+
 // 답을 저장하는 중인 공부 칸 번호. 저장이 끝나기 전에 또 눌러도 한 번만 반영한다.
 const answering = new Set<number>()
 
@@ -374,11 +377,16 @@ async function openLesson($: EngineInterface): Promise<void> {
 
     void changeStats($, { lessons: 1 })
 
-    const lesson = lessons.has(cardSeq) ? (lessons.get(cardSeq) ?? null) : await makeLesson($, card, cardSeq).catch(() => null)
+    const lesson = lessons.has(cardSeq) ? (lessons.get(cardSeq) ?? null) : await lessonFor($, card, cardSeq)
 
     if (lesson === null) {
       await changeStudy($, id, s => ({ id: s.id, view: 'no-lesson', reason: lessons.has(cardSeq) ? 'none' : 'failed' }))
 
+      return
+    }
+
+    // 만드는 사이 학습자가 칸을 닫았거나 다른 칸을 열었으면, 보지 않은 문제이니 노트에 담지 않는다.
+    if ((await read($, study))?.id !== id) {
       return
     }
 
@@ -407,6 +415,23 @@ async function openLesson($: EngineInterface): Promise<void> {
       () => undefined,
     )
   }
+}
+
+/** 이 카드의 학습하기를 만든다. 이미 만드는 중이면 그 결과를 함께 기다린다. 실패하면 null. */
+function lessonFor($: EngineInterface, card: SentenceMap, cardSeq: number): Promise<Lesson | null> {
+  const inFlight = making.get(cardSeq)
+
+  if (inFlight !== undefined) {
+    return inFlight
+  }
+
+  const made = makeLesson($, card, cardSeq)
+    .catch(() => null)
+    .finally(() => making.delete(cardSeq))
+
+  making.set(cardSeq, made)
+
+  return made
 }
 
 /**
@@ -874,7 +899,7 @@ function lessonRows(s: Extract<Study, { view: 'lesson' }>, on: StudyActions, clo
   return [
     { text: `학습하기 · ${s.step + 1}/${total}`, color: ACCENT, bold: true },
     ...(showPoint ? pointRows(s.point) : []),
-    ...arrangeRows(a, on),
+    ...arrangeRows(a, on, close),
     ...after,
   ]
 }
@@ -891,7 +916,7 @@ function pointRows(p: { ko: string; en: string; hint: string }): Row[] {
  * 조각 맞추기: 한국어 문장, 지금까지 놓은 영어, 남은 조각 버튼. 버튼은 왼쪽부터 숫자 키 1, 2, 3.
  * 끝나면 버튼 대신 결과와, 정답 문장을 한국어 조각과 같은 색으로 보여 준다.
  */
-function arrangeRows(a: Arrange, on: StudyActions, saysRight = true): Row[] {
+function arrangeRows(a: Arrange, on: StudyActions, close: RowButton, saysRight = true): Row[] {
   const parts = a.drill.parts
   const korean = (colors: boolean): Row => ({
     runs: colors ? segments(a.drill.ko, parts.map(p => p.ko)).map(seg => pairRun(seg, true)) : [{ text: a.drill.ko }],
@@ -913,12 +938,16 @@ function arrangeRows(a: Arrange, on: StudyActions, saysRight = true): Row[] {
       a.placed === 0 ? { text: '영어 조각을 순서대로 눌러 보세요', dim: true, indent: 2 } : english(a.placed, a.colors),
       {
         // 남은 조각은 늘 왼쪽부터 1, 2, 3. 버튼에 번호가 보이지 않으니 규칙이 하나여야 쉽다.
-        buttons: left.map((i, at) => ({
-          key: `piece-${i}`,
-          label: pieceLabel(parts[i]?.en ?? '', i === 0),
-          hotkey: String(at + 1),
-          onPress: () => on.piece(i),
-        })),
+        // 푸는 중에도 그만둘 수 있게 닫기를 끝에 둔다.
+        buttons: [
+          ...left.map((i, at) => ({
+            key: `piece-${i}`,
+            label: pieceLabel(parts[i]?.en ?? '', i === 0),
+            hotkey: String(at + 1),
+            onPress: () => on.piece(i),
+          })),
+          close,
+        ],
       },
     ]
   }
@@ -965,7 +994,7 @@ function quizRows(s: Extract<Study, { view: 'quiz' }>, on: StudyActions, close: 
       { text: title, color: ACCENT, bold: true },
       ...(s.arrange.result === null || s.point === null ? [] : pointRows(s.point)),
       // 맞혔을 때는 아래 결과 줄이 말해 주니 여기서는 쓰지 않는다.
-      ...arrangeRows(s.arrange, on, false),
+      ...arrangeRows(s.arrange, on, close, false),
       ...end,
     ]
   }

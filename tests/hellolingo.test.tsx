@@ -728,6 +728,8 @@ describe('expression notebook and study panel', () => {
     expect(pieces.map(b => b.props.label).sort()).toEqual(['add a button', 'the quantity', 'to change'])
     expect(pieces.map(b => b.props.label)).not.toEqual(['add a button', 'to change', 'the quantity'])
     expect(pieces.map(b => b.props.hotkey)).toEqual(['1', '2', '3'])
+    // 푸는 중에도 닫을 수 있다.
+    expect((await ui.find({ type: 'Button', key: 'study-close' }))?.props.hotkey).toBe('q')
 
     await arrange(ui, clock, [0, 1, 2])
     expect(await ui.find({ type: 'Text', text: /✓ 맞았어요!/ })).toBeDefined()
@@ -805,6 +807,53 @@ describe('expression notebook and study panel', () => {
     await clock.settle()
     expect(lessonCalls()).toBe(4)
     expect(await ui.find({ type: 'Text', text: /^학습하기 · 1\/2$/ })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('closing 학습하기 before its problems arrive keeps them out of the notes, and pressing again waits for the same call', async ($, on) => {
+    const clock = mock.clock(on)
+    const stored: Record<string, unknown> = {}
+    const lesson = held()
+    const asked = engine(on, prompt => (prompt.includes('MODE: LESSON') ? lesson.hold() : KO_REPLY), stored)
+
+    await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+    await $.prompt.submit(typed(KO_PROMPT))
+    await clock.settle()
+    const ui = await $.ui.mount(WIDE)
+
+    await ui.press({ key: 'study-lesson' })
+    await clock.settle()
+    expect(await ui.find({ type: 'Text', text: /문제를 만드는 중/ })).toBeDefined()
+    // 잘못 눌러서 바로 닫는다. 그 뒤에 문제가 도착한다.
+    await ui.press({ key: 'study-close' })
+    await clock.settle()
+    lesson.release(0, LESSON_REPLY)
+    await clock.settle()
+
+    expect(Object.keys(asNotes(stored.notes))).toEqual(['null check'])
+    expect(await ui.find({ type: 'Box', key: 'study' })).toBeUndefined()
+
+    // 다시 누르면 만들어 둔 문제가 바로 나오고, 그때 노트에 담긴다.
+    await ui.press({ key: 'study-lesson' })
+    await clock.settle()
+    expect(await ui.find({ type: 'Text', text: /^학습하기 · 1\/2$/ })).toBeDefined()
+    expect(Object.keys(asNotes(stored.notes))).toEqual(['null check', 'a field to ~'])
+    expect(asked.filter(a => a.prompt.includes('MODE: LESSON'))).toHaveLength(1)
+
+    // 다음 카드에서, 문제가 오기 전에 닫았다가 다시 누른다. 만드는 중인 호출을 함께 기다리고 또 부르지 않는다.
+    await ui.press({ key: 'study-close' })
+    await $.prompt.submit(typed('회원가입 버튼 색 바꿔줘'))
+    await clock.settle()
+    await ui.press({ key: 'study-lesson' })
+    await clock.settle()
+    await ui.press({ key: 'study-close' })
+    await clock.settle()
+    await ui.press({ key: 'study-lesson' })
+    await clock.settle()
+    lesson.release(1, LESSON_REPLY)
+    await clock.settle()
+    expect(await ui.find({ type: 'Text', text: /^학습하기 · 1\/2$/ })).toBeDefined()
+    expect(asked.filter(a => a.prompt.includes('MODE: LESSON'))).toHaveLength(2)
     await ui.unmount()
   })
 
