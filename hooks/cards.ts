@@ -212,7 +212,7 @@ export function segments(sentence: string, pieces: readonly string[]): Segment[]
 }
 
 /** 답에서 첫 `{`부터 마지막 `}`까지를 JSON 객체로. 아니면 null. */
-function parseObject(reply: string): Record<string, unknown> | null {
+export function parseObject(reply: string): Record<string, unknown> | null {
   const start = reply.indexOf('{')
   const end = reply.lastIndexOf('}')
 
@@ -267,19 +267,20 @@ function toFix(v: unknown): Fix | null {
   return { wrong, right, why: str(v.why) ?? '' }
 }
 
-function hasWord(s: string): boolean {
+export function hasWord(s: string): boolean {
   return /[\p{L}\p{N}]/u.test(s)
 }
 
-function isObject(v: unknown): v is Record<string, unknown> {
+export function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
-function list(v: unknown): readonly unknown[] {
+export function list(v: unknown): readonly unknown[] {
   return Array.isArray(v) ? v : []
 }
 
-function str(v: unknown): string | null {
+/** 공백을 하나로 맞춘 글. 비었거나 글이 아니면 null, 너무 길면 자른다. */
+export function str(v: unknown): string | null {
   if (typeof v !== 'string') {
     return null
   }
