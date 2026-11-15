@@ -21,7 +21,7 @@ Claude와 일하는 동안 영어가 조금씩 늘게 돕는 Claude Code 플러�
 
 ![입력창 위에 "학습하기 · 1/2", "~하는 버튼 → a button to ~"와 섞인 영어 조각 단추가 있습니다.](docs/guide/images/study-1-first.png)
 
-영어로 프롬프트를 쓰면 틀린 곳을 고쳐 줍니다. 틀린 곳이 없으면 더 자연스러운 말을 하나 알려 줍니다.
+영어로 프롬프트를 쓰면 틀린 곳을 고쳐 줍니다. 고친 곳은 노트에 모여서, 다음 날부터 내가 쓴 틀린 문장을 보고 맞는 말을 떠올립니다. 틀린 곳이 없으면 더 자연스러운 말을 하나 알려 줍니다.
 
 ## 설치
 
@@ -51,7 +51,7 @@ Claude Code v2.1.311 이상이 필요합니다. 터미널과 데스크톱 앱에
 - 못 떠올려도 괜찮습니다. 다음 날 다시 나옵니다. 떠올리려고 애쓴 것만으로도 기억에 도움이 됩니다.
 - 언제든 `닫기`(`q`)를 누릅니다. 정답을 보고 답하지 않고 닫은 표현은 다음 날 다시 나옵니다.
 
-키를 누르기 전에 카드를 한 번 클릭하거나, `ctrl+x`를 누른 다음 `tab`을 눌러 카드로 옮겨 갑니다. 마우스로 단추를 눌러도 됩니다.
+단추마다 누르는 키가 함께 보입니다. 예: `학습하기 (s)`, `1 the order`. 키를 누르기 전에 카드를 한 번 클릭하거나, `ctrl+x`를 누른 다음 `tab`을 눌러 카드로 옮겨 갑니다. 마우스로 단추를 눌러도 됩니다.
 
 ## 노트 보기
 
@@ -81,7 +81,7 @@ hellolingo is a Claude Code plugin for Korean speakers who want to learn English
 3. **Collect.** One reusable expression from each card goes into a notebook on its own, and so does every pattern you studied.
 4. **Recall.** From the next day, a `복습 N` button shows how many expressions are due. Press it while Claude works: recall each one in your head (`r` shows the answer, `o` if you recalled it, `x` if not), or arrange a new sentence for a studied pattern. Nothing pops up by itself.
 
-Prompts written in English get their mistakes corrected. It collects at most 5 new expressions a day and pauses when 10 reviews are due. Each learnable prompt goes to haiku once, and each press of `학습하기` once more, through Claude Code's own model call. Daily study counts stay on your machine and show as one line in `/lingo-notes`. It never reads or changes Claude's replies, your code or your files, and your notes stay on your machine. It needs Claude Code v2.1.311 or later and supports Korean to English for now. Japanese, Chinese and business terms are planned. The design and the research behind it are in [docs/learning-design.md](docs/learning-design.md) (Korean).
+Prompts written in English get their mistakes corrected, and the first fix goes into the notebook: from the next day you see what you wrote and recall the fix. It collects at most 5 new expressions a day and pauses when 10 reviews are due. Each learnable prompt goes to haiku once, and each press of `학습하기` once more, through Claude Code's own model call. Daily study counts stay on your machine and show as one line in `/lingo-notes`. It never reads or changes Claude's replies, your code or your files, and your notes stay on your machine. It needs Claude Code v2.1.311 or later and supports Korean to English for now. Japanese, Chinese and business terms are planned. The design and the research behind it are in [docs/learning-design.md](docs/learning-design.md) (Korean).
 
 ## 라이선스
 
