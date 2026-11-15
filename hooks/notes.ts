@@ -1,7 +1,7 @@
 // 표현 노트: 카드에 나온 표현과 학습하기에서 연습한 배울 점을 모아 두고, 간격 반복으로 언제 다시 볼지 정한다.
 // 값만 다루는 함수들이다. 저장소에서 읽고 쓰는 일은 register.tsx가 한다.
 
-import type { Drill, Lesson, Note, Notes, Part, Phrase, Point } from '../types'
+import type { Drill, Fix, Lesson, Note, Notes, Part, Phrase, Point } from '../types'
 
 export const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -15,6 +15,9 @@ export const NEW_PER_DAY = 5
 
 /** 복습할 때가 된 표현이 이만큼 쌓이면, 복습을 먼저 하도록 새 표현을 모으지 않는다. */
 export const MAX_DUE = 10
+
+/** 이보다 긴 고침은 문장을 통째로 다시 쓴 것이라 떠올려 볼 거리가 아니다 */
+const MAX_FIX_CHARS = 60
 
 /** 배울 점 하나에 남겨 두는 복습 문제 수 */
 const MAX_DRILLS_KEPT = 6
@@ -74,6 +77,26 @@ export function addPhrases(notes: Notes, phrases: readonly Phrase[], now: number
   }
 
   return keepNewest(added)
+}
+
+/**
+ * 영어 프롬프트에서 고친 곳을 노트에 담는다. 내가 실제로 틀린 곳이 가장 배울 만한 것이다.
+ * 새 고침은 핵심 표현처럼 하루 몫과 밀린 복습을 따른다. 이미 담긴 고침을 또 틀렸으면
+ * 처음부터 다시 본다: 간격을 첫 칸으로 돌리고, 복습 날이 하루보다 늦으면 하루 뒤로 당긴다.
+ */
+export function addFix(notes: Notes, fix: Fix, now: number): Notes {
+  const id = noteId(fix.right)
+  const old = notes[id]
+
+  if (fix.wrong.length > MAX_FIX_CHARS || fix.right.length > MAX_FIX_CHARS) {
+    return notes
+  }
+
+  if (old !== undefined) {
+    return old.wrong === undefined ? notes : { ...notes, [id]: { ...old, level: 0, dueAt: Math.min(old.dueAt, now + DAY_MS) } }
+  }
+
+  return addPhrases(notes, [{ en: fix.right, ko: `"${fix.wrong}" 고치기`, example: fix.why, wrong: fix.wrong }], now)
 }
 
 /**
@@ -238,9 +261,10 @@ function keepNewest(notes: Notes): Notes {
   return Object.fromEntries(all.sort(([, a], [, b]) => b.addedAt - a.addedAt).slice(0, MAX_NOTES))
 }
 
-/** 배울 점과 문제의 모양이 틀렸으면 그 둘만 빼고 핵심 표현처럼 둔다. */
+/** 배울 점과 문제, 고친 곳의 모양이 틀렸으면 그것만 빼고 핵심 표현처럼 둔다. */
 function withLesson(note: Note): Note {
-  const { point, drills, ...phrase } = note
+  const { point, drills, wrong, ...rest } = note
+  const phrase = typeof wrong === 'string' && wrong !== '' ? { ...rest, wrong } : rest
   const goodDrills = Array.isArray(drills) ? drills.filter(isDrill) : []
 
   return isPoint(point) && goodDrills.length > 0 ? { ...phrase, point, drills: goodDrills } : phrase
