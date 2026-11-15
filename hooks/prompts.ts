@@ -41,6 +41,7 @@ export const KO_TASK = [
   'that asks for something, as long as that part reads well on its own.',
   'Copy what you picked into "original", exactly as written, and rewrite it as natural English in "english"',
   '(one sentence, or two short ones at most).',
+  'Korean nouns do not show number: write one thing ("a label", "the test") unless the Korean says there are several.',
   'Their sentences often mix in short English words, branch names, file paths and commands: those are part of',
   'the sentence. Keep them in "original", and keep each identifier exactly as written in "english".',
   'Never pick material pasted before or after their sentences, usually on lines of its own: error messages,',
