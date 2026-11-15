@@ -1,5 +1,8 @@
-/** 학습할 표현 하나: 영어 / 한국어 뜻 / 짧은 예문 */
-export type Phrase = { en: string; ko: string; example: string }
+/**
+ * 학습할 표현 하나: 영어 / 한국어 뜻 / 짧은 예문.
+ * wrong이 있으면 영어 프롬프트에서 고친 곳이다: wrong은 내가 쓴 틀린 말, en은 고친 말, example은 고친 까닭.
+ */
+export type Phrase = { en: string; ko: string; example: string; wrong?: string }
 
 /** 영어 프롬프트에서 고칠 부분 하나 */
 export type Fix = { wrong: string; right: string; why: string }
@@ -109,6 +112,8 @@ export type Study = { id: number } & (
       ko: string
       en: string
       example: string
+      /** 영어 프롬프트에서 고친 곳이면 내가 쓴 틀린 말 */
+      wrong: string | null
       point: Point | null
       /** 마지막으로 본 지 며칠 */
       seenDaysAgo: number

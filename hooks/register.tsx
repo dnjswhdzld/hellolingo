@@ -13,7 +13,7 @@
 import { atom, read, update } from 'claude-code'
 import type { ElementTable, EngineInterface, PromptSubmitInput, Register } from 'claude-code'
 
-import type { Arrange, Card, DayStats, Layer, Lesson, Note, Notes, Phrase, SentenceMap, Stats, Study } from '../types'
+import type { Arrange, Card, DayStats, Fix, Layer, Lesson, Note, Notes, Phrase, SentenceMap, Stats, Study } from '../types'
 import { isKorean, notNull, parseCard, segments } from './cards'
 import type { Segment } from './cards'
 import { DRILLS_NOW, drillsForReview, parseLesson, pickPiece, piecesLeft, startArrange } from './lessons'
@@ -21,6 +21,7 @@ import {
   DAY_MS,
   MAX_DUE,
   NEW_PER_DAY,
+  addFix,
   addPhrases,
   addPoint,
   answerNote,
@@ -234,6 +235,7 @@ async function translate($: EngineInterface, text: string, mine: number): Promis
 
     if (made !== null && isShown) {
       await savePhrases($, cardPhrases(made))
+      await saveFix($, cardFix(made))
       await changeStats($, { cards: 1 })
     }
   } catch {
@@ -282,6 +284,13 @@ function cardPhrases(c: Card): readonly Phrase[] {
     case 'en-fix':
       return []
   }
+}
+
+/**
+ * 영어 카드에서 노트에 모을 고침: 가장 중요한 첫 하나만. 한 카드에 하나만 모아야 노트가 감당할 만큼 찬다.
+ */
+function cardFix(c: Card): Fix | null {
+  return c.kind === 'en-fix' ? (c.fixes[0] ?? null) : null
 }
 
 /**
@@ -336,6 +345,12 @@ async function loadStore($: EngineInterface): Promise<void> {
 async function savePhrases($: EngineInterface, phrases: readonly Phrase[]): Promise<void> {
   if (phrases.length > 0) {
     await changeNotes($, (notes, now) => [addPhrases(notes, phrases, now), undefined])
+  }
+}
+
+async function saveFix($: EngineInterface, fix: Fix | null): Promise<void> {
+  if (fix !== null) {
+    await changeNotes($, (notes, now) => [addFix(notes, fix, now), undefined])
   }
 }
 
@@ -534,6 +549,7 @@ function quizOf(id: number, note: Note, mode: 'review' | 'practice', now: number
     ko: note.ko,
     en: note.en,
     example: note.example,
+    wrong: note.wrong ?? null,
     point: note.point ?? null,
     seenDaysAgo: Math.floor((now - note.seenAt) / DAY_MS),
     arrange: drill === null ? null : startArrange(drill, false, id),
@@ -697,7 +713,7 @@ type Row =
 
 /** 줄들을 그린다 */
 function drawRows({ Box, Button, Text }: ElementTable, rows: readonly Row[]) {
-  const button = (b: RowButton) => <Button key={b.key} label={b.label} hotkey={b.hotkey} onPress={b.onPress} />
+  const button = (b: RowButton) => <Button key={b.key} label={shownLabel(b)} hotkey={b.hotkey} onPress={b.onPress} />
 
   return rows.map(row => {
     if ('buttons' in row && 'title' in row) {
@@ -752,6 +768,14 @@ function drawRows({ Box, Button, Text }: ElementTable, rows: readonly Row[]) {
     // 들여쓰기는 앞에 공백을 붙이지 않고 안쪽 여백으로 한다. 공백이면 넘친 다음 줄이 맨 앞에서 시작한다.
     return row.indent === undefined ? line : <Box paddingLeft={row.indent}>{line}</Box>
   })
+}
+
+/**
+ * 버튼에 쓰는 글. 누르는 키를 함께 보여 준다: 키가 보이지 않으면 설명서를 읽어야만 알 수 있다.
+ * 고르는 번호는 앞에("1 the order"), 그 밖의 키는 뒤에 괄호로("학습하기 (s)").
+ */
+export function shownLabel(b: { label: string; hotkey?: string }): string {
+  return b.hotkey === undefined ? b.label : /^\d$/.test(b.hotkey) ? `${b.hotkey} ${b.label}` : `${b.label} (${b.hotkey})`
 }
 
 /** 보여줄 카드가 아직 없을 때, 첫 카드를 영어로 옮기는 동안의 줄 */
@@ -971,7 +995,7 @@ export function pieceLabel(en: string, isFirst: boolean): string {
  * 직접 연 퀴즈라서 정답은 학습자가 보고 싶을 때 본다.
  */
 function quizRows(s: Extract<Study, { view: 'quiz' }>, on: StudyActions, close: RowButton): Row[] {
-  const title = `${s.mode === 'review' ? '복습' : '연습'} · ${daysAgo(s.seenDaysAgo)} 본 표현`
+  const title = `${s.mode === 'review' ? '복습' : '연습'} · ${daysAgo(s.seenDaysAgo)} ${s.wrong === null ? '본' : '고친'} 표현`
   const next: RowButton =
     s.mode === 'review'
       ? { key: 'study-next', label: '다음 복습', hotkey: 'n', onPress: on.next }
@@ -989,16 +1013,25 @@ function quizRows(s: Extract<Study, { view: 'quiz' }>, on: StudyActions, close: 
   }
 
   const recall = s.recall ?? { isRevealed: false, answer: null }
+  // 고친 곳은 내가 쓴 틀린 말을 보여 주고, 맞는 말을 떠올리게 한다.
   const head: Row[] = [
     { text: title, color: ACCENT, bold: true },
-    { text: `"${s.ko}" — 영어로 떠올려 보세요`, indent: 2 },
+    ...(s.wrong === null
+      ? [{ text: `"${s.ko}" — 영어로 떠올려 보세요`, indent: 2 }]
+      : [
+          { text: `✗ ${s.wrong}`, color: BAD, indent: 2 },
+          { text: '맞게 고쳐서 떠올려 보세요', dim: true, indent: 2 },
+        ]),
   ]
 
   if (!recall.isRevealed) {
     return [...head, { buttons: [{ key: 'quiz-reveal', label: '정답 보기', hotkey: 'r', onPress: on.reveal }, close] }]
   }
 
-  const answer: Row[] = [{ text: s.en, bold: true, indent: 2 }, ...exampleRows(s.example)]
+  const answer: Row[] =
+    s.wrong === null
+      ? [{ text: s.en, bold: true, indent: 2 }, ...exampleRows(s.example)]
+      : [{ text: `✓ ${s.en}`, color: GOOD, bold: true, indent: 2 }, ...(s.example === '' ? [] : [{ text: s.example, dim: true, indent: 4 }])]
 
   if (!s.isAnswered) {
     return [

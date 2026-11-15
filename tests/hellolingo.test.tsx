@@ -4,6 +4,7 @@ import type { On } from 'claude-code'
 
 import {
   DAY_MS,
+  addFix,
   addPhrases,
   addPoint,
   answerNote,
@@ -16,7 +17,7 @@ import {
   studyOrder,
 } from '../hooks/notes'
 import { drillSentence, drillsForReview, parseLesson, pickPiece, piecesLeft, startArrange } from '../hooks/lessons'
-import { notesPaneRows, pieceLabel } from '../hooks/register'
+import { notesPaneRows, pieceLabel, shownLabel } from '../hooks/register'
 import { isInSentence, isKorean, parseCard, segments, translatedPart } from '../hooks/cards'
 import { asStats, bump, lastWeek, reviewed } from '../hooks/stats'
 import type { DayStats, Note, Notes } from '../types'
@@ -427,7 +428,8 @@ describe('band above the prompt', () => {
     expect(await ui.find({ type: 'Text', text: /✗ I want know/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: KO_ENGLISH_LINE })).toBeUndefined()
     expect(await ui.find({ type: 'Text', text: PENDING_ROW })).toBeUndefined()
-    expect(Object.keys(asNotes(stored.notes))).toEqual([])
+    // 화면에 나온 영어 카드의 고침만 노트에 있다. 묻힌 한국어 카드의 표현은 없다.
+    expect(Object.keys(asNotes(stored.notes))).toEqual(['i want to know'])
     await ui.unmount()
   })
 
@@ -497,7 +499,7 @@ describe('expression notebook and study panel', () => {
     await clock.settle()
     const today = await $.ui.mount(WIDE)
 
-    expect(await labels(today)).toEqual(['학습하기', '학습 노트'])
+    expect(await labels(today)).toEqual(['학습하기 (s)', '학습 노트 (b)'])
     expect((await today.findAll({ type: 'Button' })).map(b => b.props.hotkey)).toEqual(['s', 'b'])
     expect(await today.find({ type: 'Box', key: 'study' })).toBeUndefined()
     await today.unmount()
@@ -508,7 +510,7 @@ describe('expression notebook and study panel', () => {
     await clock.settle()
     const tomorrow = await $.ui.mount(WIDE)
 
-    expect(await labels(tomorrow)).toEqual(['학습하기', '복습 1', '학습 노트'])
+    expect(await labels(tomorrow)).toEqual(['학습하기 (s)', '복습 1 (v)', '학습 노트 (b)'])
     expect(await tomorrow.find({ type: 'Box', key: 'study' })).toBeUndefined()
     await tomorrow.unmount()
   })
@@ -562,13 +564,13 @@ describe('expression notebook and study panel', () => {
     expect(await ui.find({ type: 'Text', text: /^예: Add a null check here\.$/ })).toBeDefined()
     // 들여쓰기는 안쪽 여백이라, 좁은 칸에서 넘친 줄도 같은 자리에서 이어진다.
     expect((await ui.find({ type: 'Box', text: /^예: Add a null check here\.$/ }))?.props.paddingLeft).toBe(4)
-    expect(await labels(ui)).toEqual(['떠올렸어요', '못 떠올렸어요', '닫기'])
+    expect(await labels(ui)).toEqual(['떠올렸어요 (o)', '못 떠올렸어요 (x)', '닫기 (q)'])
     await ui.press({ key: 'quiz-knew' })
     await clock.settle()
     expect(await ui.find({ type: 'Button', key: 'quiz-knew' })).toBeUndefined()
     expect(await ui.find({ type: 'Text', text: /좋아요! 3일 뒤에 다시 볼게요/ })).toBeDefined()
     // 복습할 것이 더 없으면 닫기만 남는다.
-    expect(await labels(ui)).toEqual(['닫기'])
+    expect(await labels(ui)).toEqual(['닫기 (q)'])
     expect(asNotes(stored.notes)['null check']).toMatchObject({ level: 1 })
     await ui.press({ key: 'study-close' })
     await clock.settle()
@@ -599,7 +601,7 @@ describe('expression notebook and study panel', () => {
     await ui.press({ key: 'quiz-forgot' })
     await clock.settle()
     expect(await ui.find({ type: 'Text', text: /괜찮아요, 내일 다시 볼게요/ })).toBeDefined()
-    expect(await labels(ui)).toEqual(['다음 복습', '닫기'])
+    expect(await labels(ui)).toEqual(['다음 복습 (n)', '닫기 (q)'])
     expect(asNotes(stored.notes).answered).toMatchObject({ level: 0 })
 
     await ui.press({ key: 'study-next' })
@@ -609,7 +611,7 @@ describe('expression notebook and study panel', () => {
     await clock.settle()
     await ui.press({ key: 'quiz-knew' })
     await clock.settle()
-    expect(await labels(ui)).toEqual(['닫기'])
+    expect(await labels(ui)).toEqual(['닫기 (q)'])
     await ui.unmount()
   })
 
@@ -725,8 +727,12 @@ describe('expression notebook and study panel', () => {
     const pieces = (await ui.findAll({ type: 'Button' })).filter(b => String(b.key).startsWith('piece-'))
 
     // 첫 조각의 대문자와 끝의 마침표는 버튼에 쓰지 않는다: 그것만 보고 순서를 맞출 수 없게.
-    expect(pieces.map(b => b.props.label).sort()).toEqual(['add a button', 'the quantity', 'to change'])
-    expect(pieces.map(b => b.props.label)).not.toEqual(['add a button', 'to change', 'the quantity'])
+    // 버튼마다 누를 번호가 앞에 보인다.
+    const texts = pieces.map(b => String(b.props.label))
+
+    expect(texts.map(t => t.slice(0, 2))).toEqual(['1 ', '2 ', '3 '])
+    expect(texts.map(t => t.slice(2)).sort()).toEqual(['add a button', 'the quantity', 'to change'])
+    expect(texts.map(t => t.slice(2))).not.toEqual(['add a button', 'to change', 'the quantity'])
     expect(pieces.map(b => b.props.hotkey)).toEqual(['1', '2', '3'])
     // 푸는 중에도 닫을 수 있다.
     expect((await ui.find({ type: 'Button', key: 'study-close' }))?.props.hotkey).toBe('q')
@@ -737,7 +743,7 @@ describe('expression notebook and study panel', () => {
     expect((await ui.find({ type: 'Text', text: /^to change$/ }))?.props.color).toBe(
       (await ui.find({ type: 'Text', text: /^바꾸는$/ }))?.props.color,
     )
-    expect(await labels(ui)).toEqual(['다음 문제', '닫기'])
+    expect(await labels(ui)).toEqual(['다음 문제 (n)', '닫기 (q)'])
 
     await ui.press({ key: 'study-next' })
     await clock.settle()
@@ -751,7 +757,7 @@ describe('expression notebook and study panel', () => {
     expect(await ui.find({ type: 'Text', text: /^✗ 영어는 위 순서예요$/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /^a field to ~$/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /^2문제 가운데 1개를 맞혔어요\.$/ })).toBeDefined()
-    expect(await labels(ui)).toEqual(['닫기'])
+    expect(await labels(ui)).toEqual(['닫기 (q)'])
 
     // 배울 점은 노트에 담기고, 첫 복습은 하루 뒤. 복습은 지금 풀지 않은 문장부터.
     const saved = asNotes(stored.notes)['a field to ~']
@@ -807,6 +813,42 @@ describe('expression notebook and study panel', () => {
     await clock.settle()
     expect(lessonCalls()).toBe(4)
     expect(await ui.find({ type: 'Text', text: /^학습하기 · 1\/2$/ })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('a mistake fixed in an English prompt enters the notes and comes back as: here is what I wrote, recall the fix', async ($, on) => {
+    const clock = mock.clock(on)
+    const stored: Record<string, unknown> = {}
+    engine(on, () => EN_REPLY, stored)
+
+    await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+    await $.prompt.submit(typed(EN_PROMPT))
+    await clock.settle()
+    expect(asNotes(stored.notes)['i want to know']).toMatchObject({ en: 'I want to know', wrong: 'I want know', level: 0, dueAt: DAY_MS })
+
+    await clock.advance(DAY_MS)
+    await $.prompt.submit(typed('응 해줘'))
+    await clock.settle()
+    const ui = await $.ui.mount(WIDE)
+
+    await ui.press({ key: 'study-review' })
+    await clock.settle()
+    expect(await ui.find({ type: 'Text', text: /^복습 · 어제 고친 표현$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^✗ I want know$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^맞게 고쳐서 떠올려 보세요$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /I want to know/ })).toBeUndefined()
+    await ui.press({ key: 'quiz-reveal' })
+    await clock.settle()
+    expect(await ui.find({ type: 'Text', text: /^✓ I want to know$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^want 뒤에는 to \+ 동사$/ })).toBeDefined()
+    await ui.press({ key: 'quiz-knew' })
+    await clock.settle()
+    expect(asNotes(stored.notes)['i want to know']).toMatchObject({ level: 1 })
+
+    // 같은 실수를 또 하면 처음부터 다시 본다.
+    await $.prompt.submit(typed(EN_PROMPT))
+    await clock.settle()
+    expect(asNotes(stored.notes)['i want to know']).toMatchObject({ level: 0, dueAt: 2 * DAY_MS })
     await ui.unmount()
   })
 
@@ -930,7 +972,7 @@ describe('expression notebook and study panel', () => {
     // 복습할 때가 된 것, 그다음은 덜 익힌 것부터. 영어는 보이지 않는다.
     const picks = (await ui.findAll({ type: 'Button' })).filter(b => String(b.key).startsWith('note-'))
 
-    expect(picks.map(b => b.props.label)).toEqual(['지금 것', 'null 여부 확인', '약한 것', '나중 것'])
+    expect(picks.map(b => b.props.label)).toEqual(['1 지금 것', '2 null 여부 확인', '3 약한 것', '4 나중 것'])
     expect(picks.map(b => b.props.hotkey)).toEqual(['1', '2', '3', '4'])
     expect(await ui.find({ type: 'Text', text: /^(due|later|weak)$/ })).toBeUndefined()
 
@@ -1262,6 +1304,26 @@ describe('local helpers', () => {
     expect(again['a field to ~']).toMatchObject({ level: 3, dueAt: 2 * DAY_MS })
     expect(again['a field to ~']?.drills?.map(d => d.ko)).toEqual(['새 문장', '날짜 고르는 창 열어줘', '보고서 내려받는 링크 만들어줘'])
     expect(rotateDrills(again, 'a field to ~')['a field to ~']?.drills?.[0]?.ko).toBe('날짜 고르는 창 열어줘')
+  })
+
+  test('fixes: long rewrites are not noted, new ones follow the daily limit, and a repeat never touches a plain phrase', async () => {
+    const fix = (wrong: string, right: string) => ({ wrong, right, why: '' })
+    const long = 'Could you please go ahead and deploy the new version to production today'
+
+    expect(addFix({}, fix('proceed the deployment', long), 0)).toEqual({})
+    expect(addFix({}, fix('explain me', 'explain to me'), 0)['explain to me']).toMatchObject({ ko: '"explain me" 고치기', wrong: 'explain me' })
+
+    const full: Notes = Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`p${i}`, note(`p${i}`, '뜻', { addedAt: 0, dueAt: DAY_MS })]))
+
+    expect(addFix(full, fix('explain me', 'explain to me'), 10)).toBe(full)
+
+    // 고친 말이 이미 핵심 표현으로 담겨 있으면 그대로 둔다.
+    const phrase: Notes = { 'make sure': note('make sure', '꼭 ~하다', { level: 3, dueAt: 9 * DAY_MS }) }
+
+    expect(addFix(phrase, fix('make sure of', 'make sure'), 10)).toBe(phrase)
+    expect(shownLabel({ label: '닫기', hotkey: 'q' })).toBe('닫기 (q)')
+    expect(shownLabel({ label: 'the order', hotkey: '2' })).toBe('2 the order')
+    expect(shownLabel({ label: '뜻' })).toBe('뜻')
   })
 
   test('practicing a note before it is due changes nothing when recalled, and pulls it to tomorrow when not', async () => {
