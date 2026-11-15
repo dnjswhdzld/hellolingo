@@ -15,6 +15,14 @@
    "due": 1.0,
    "level": 1,
    "seen": -0.5
+  },
+  {
+   "en": "Explain this error to me",
+   "ko": "\"Explain me this error\" 고치기",
+   "example": "explain 바로 뒤에 사람을 쓰지 않아요. to me를 뒤로 보내요.",
+   "wrong": "Explain me this error",
+   "added": -3.0,
+   "due": -0.1
   }
  ],
  "turns": [
@@ -193,6 +201,53 @@
   },
   {
    "shot": "english-3-natural"
+  },
+  {
+   "sleep": 3.0
+  },
+  {
+   "keys": [
+    "C-x"
+   ]
+  },
+  {
+   "sleep": 0.3
+  },
+  {
+   "keys": [
+    "Tab"
+   ]
+  },
+  {
+   "sleep": 0.5
+  },
+  {
+   "keys": [
+    "v"
+   ]
+  },
+  {
+   "wait": "맞게 고쳐서"
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "english-4-review"
+  },
+  {
+   "keys": [
+    "r"
+   ]
+  },
+  {
+   "wait": "✓ Explain this error to me"
+  },
+  {
+   "sleep": 0.6
+  },
+  {
+   "shot": "english-5-answer"
   }
  ]
 }

@@ -90,7 +90,9 @@ def make_home(scene, name):
                                    'addedAt': at(n['added']), 'seenAt': at(n.get('seen', n['added'])),
                                    'level': n.get('level', 0), 'dueAt': at(n['due']), 'shownAt': None,
                                    # 학습하기에서 연습한 배울 점이면 그 틀과 복습 때 낼 문제들
-                                   **({'point': n['point'], 'drills': n['drills']} if 'point' in n else {})}
+                                   **({'point': n['point'], 'drills': n['drills']} if 'point' in n else {}),
+                                   # 영어 프롬프트에서 고친 곳이면 내가 쓴 틀린 말
+                                   **({'wrong': n['wrong']} if 'wrong' in n else {})}
     (home / '.claude' / 'plugins' / 'store' / STORE).write_text(json.dumps({'notes': notes}, ensure_ascii=False))
     return home, project
 
@@ -176,7 +178,9 @@ def arrange(scene, wrong=False):
             pieces.append(p['en'])
     labels = [piece_label(en, i == 0) for i, en in enumerate(pieces)]
     for i, want in enumerate(labels):
-        shown = [b for b in re.findall(r'\[ ([^\]]+?) \]', re.sub(r'\x1b\[[0-9;:]*m', '', screen())) if b in labels]
+        # 버튼 글 앞의 번호("1 the order")는 떼고 견준다.
+        found = re.findall(r'\[ ([^\]]+?) \]', re.sub(r'\x1b\[[0-9;:]*m', '', screen()))
+        shown = [b for b in (re.sub(r'^\d ', '', f) for f in found) if b in labels]
         at = shown.index(want) if not (wrong and i == 0) else next(j for j, b in enumerate(shown) if b != want)
         tmux('send-keys', '-t', SESSION, str(at + 1))
         time.sleep(0.8)
